@@ -1,0 +1,28 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { categoryPath, formatDate } from '../const';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+// 文件名可能含 [] 空格等字符，URL 需编码
+const postUrl = `/blog/${encodeURIComponent(post.id)}`;
+---
+
+<div class="post-row">
+  <time class="post-date" datetime={post.data.date.toISOString()}>
+    {formatDate(post.data.date)}
+  </time>
+  <a class="post-title" href={postUrl}>{post.data.title}</a>
+  <span class="tags">
+    {
+      post.data.categories.map((cat) => (
+        <a class="tag" href={categoryPath(cat)}>
+          {cat}
+        </a>
+      ))
+    }
+  </span>
+</div>

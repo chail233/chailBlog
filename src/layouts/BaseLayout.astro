@@ -1,0 +1,272 @@
+---
+import { SITE_TITLE, SITE_DESCRIPTION, CATEGORIES } from '../const';
+
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+const pageTitle = title ? `${title} | ${SITE_TITLE}` : SITE_TITLE;
+const path = Astro.pathname;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={SITE_DESCRIPTION} />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-row">
+        <a href="/" class="site-title">{SITE_TITLE}</a>
+        <nav>
+          <a href="/" class:list={[{ active: path === '/' }]}>首页</a>
+          {
+            CATEGORIES.map((cat) => (
+              <a
+                href={`/category/${cat.slug}`}
+                class:list={[{ active: path === `/category/${cat.slug}` }]}
+              >
+                {cat.name}
+              </a>
+            ))
+          }
+          <a
+            href="/about"
+            class:list={[{ active: path === '/about' }]}>关于</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">© {new Date().getFullYear()} chail · Powered by Astro</div>
+    </footer>
+
+    <style is:global>
+      :root {
+        --fg: #1f2328;
+        --fg-muted: #6b7280;
+        --bg: #ffffff;
+        --border: #e5e7eb;
+        --accent: #2563eb;
+        --tag-bg: #eef2ff;
+        --tag-fg: #4338ca;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--fg);
+        background: var(--bg);
+        font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',
+          'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.7;
+      }
+
+      .container {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+
+      main.container {
+        min-height: calc(100vh - 160px);
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* 导航栏 */
+      .site-header {
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(6px);
+      }
+
+      .nav-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.25rem 1rem;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+
+      .site-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--fg);
+      }
+
+      .site-title:hover {
+        text-decoration: none;
+        color: var(--accent);
+      }
+
+      .site-header nav {
+        display: flex;
+        gap: 1.1rem;
+      }
+
+      .site-header nav a {
+        color: var(--fg-muted);
+        font-size: 0.95rem;
+      }
+
+      .site-header nav a:hover,
+      .site-header nav a.active {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      /* 文章列表 */
+      .post-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .post-list li {
+        padding: 0.9rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .post-list li:last-child {
+        border-bottom: none;
+      }
+
+      .post-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+      }
+
+      .post-date {
+        color: var(--fg-muted);
+        font-size: 0.85rem;
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+      }
+
+      .post-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      .post-title:hover {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .tags {
+        display: inline-flex;
+        gap: 0.4rem;
+        margin-left: auto;
+      }
+
+      .tag {
+        background: var(--tag-bg);
+        color: var(--tag-fg);
+        font-size: 0.78rem;
+        line-height: 1;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .tag:hover {
+        text-decoration: none;
+        filter: brightness(0.95);
+      }
+
+      /* 文章页 */
+      .post-header {
+        margin-bottom: 2rem;
+      }
+
+      .post-header h1 {
+        font-size: 1.7rem;
+        line-height: 1.4;
+        margin: 0 0 0.6rem;
+      }
+
+      .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+      }
+
+      article.prose h1,
+      article.prose h2,
+      article.prose h3 {
+        line-height: 1.4;
+        margin-top: 1.8em;
+      }
+
+      article.prose img {
+        max-width: 100%;
+      }
+
+      article.prose pre {
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.9rem;
+      }
+
+      article.prose code:not(pre code) {
+        background: #f3f4f6;
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+
+      article.prose blockquote {
+        margin: 1em 0;
+        padding: 0.2em 1em;
+        border-left: 4px solid var(--border);
+        color: var(--fg-muted);
+      }
+
+      .page-title {
+        margin-top: 0;
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--border);
+        color: var(--fg-muted);
+        font-size: 0.85rem;
+        padding: 1.25rem 0;
+        text-align: center;
+      }
+    </style>
+  </body>
+</html>
