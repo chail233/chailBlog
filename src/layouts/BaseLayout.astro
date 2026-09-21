@@ -256,6 +256,13 @@ const path = Astro.pathname;
         color: var(--fg-muted);
       }
 
+      /* KaTeX 块级公式：过长时可横向滚动，不撑破版面 */
+      article.prose .katex-display {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0.2em 0;
+      }
+
       .page-title {
         margin-top: 0;
       }

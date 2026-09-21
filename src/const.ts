@@ -1,5 +1,5 @@
 export const SITE_TITLE = 'chail Blog';
-export const SITE_DESCRIPTION = 'chail 的个人博客';
+export const SITE_DESCRIPTION = 'chail 的云存档';
 
 /** 导航栏中展示的分类，新增分类时在此登记 */
 export const CATEGORIES: { name: string; slug: string }[] = [
