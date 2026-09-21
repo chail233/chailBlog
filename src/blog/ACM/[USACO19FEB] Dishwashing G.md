@@ -1,7 +1,8 @@
-﻿---
+---
 title: "[USACO19FEB] Dishwashing G（贪心，二分）"
 date: 2026-07-16T16:44:55+08:00
 draft: false
+description: "USACO19FEB『Dishwashing G』题解：用多个栈模拟盘堆并保持堆底递增，二分定位目标堆再弹出插入，求能整理有序的最大前缀长度。"
 categories:
   - "算法足迹"
 ---

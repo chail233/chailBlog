@@ -1,7 +1,8 @@
-﻿---
+---
 title: "[USACO21FEB] Just Green Enough S（单调栈）"
 date: 2026-03-25T23:50:35+08:00
 draft: false
+description: "USACO『Just Green Enough』题解：把『最小值恰为 100 的子矩阵』拆成 ≥100 与 >100 两个 01 矩阵相减，再用单调栈统计全 1 子矩阵。"
 categories:
   - "算法足迹"
 ---

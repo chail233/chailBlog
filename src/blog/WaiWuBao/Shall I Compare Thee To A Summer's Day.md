@@ -1,7 +1,8 @@
-﻿---
+---
 title: "Shall I Compare Thee To A Summer's Day"
 date: 2026-07-19T20:32:07+08:00
 draft: false
+description: "一篇写给『馒头』的离别随笔：离开郑州前，地铁相伴、候车厅相送、站台一拥，长夏将尽，满是不舍与温柔。"
 categories:
   - "外物报"
 ---
