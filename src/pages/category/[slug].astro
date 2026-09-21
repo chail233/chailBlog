@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostItem from '../../components/PostItem.astro';
 import { CATEGORIES } from '../../const';
+import { sortPostsByDate } from '../../utils/post';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts', ({ data }) => !data.draft);
@@ -17,9 +18,9 @@ export async function getStaticPaths() {
 }
 
 const { name } = Astro.props as { name: string };
-const posts = (
-  await getCollection('posts', ({ data }) => !data.draft && data.categories.includes(name))
-).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const posts = sortPostsByDate(
+  await getCollection('posts', ({ data }) => !data.draft && data.categories.includes(name)),
+);
 ---
 
 <BaseLayout title={name}>

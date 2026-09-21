@@ -5,11 +5,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import PostNav from '../../components/PostNav.astro';
 import { categoryPath, formatDate } from '../../const';
+import { sortPostsByDate, updatedDate, readingTime } from '../../utils/post';
 import 'katex/dist/katex.min.css';
 
 export async function getStaticPaths() {
-  const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(
-    (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+  const posts = sortPostsByDate(
+    await getCollection('posts', ({ data }) => !data.draft),
   );
   // 降序排列（新→旧）：i-1 更新，i+1 更旧
   return posts.map((post, i) => ({
@@ -24,6 +25,10 @@ const { post, newer, older } = Astro.props as {
   older: CollectionEntry<'posts'> | null;
 };
 const { Content, headings } = await render(post);
+const updated = updatedDate(post);
+// 更新时间明显晚于发布日期（>1 小时）才展示，避免 git 提交与 date 接近时的噪声
+const showUpdated = updated.getTime() - post.data.date.getTime() > 3_600_000;
+const minutes = readingTime(post);
 ---
 
 <BaseLayout
@@ -36,6 +41,14 @@ const { Content, headings } = await render(post);
       <h1>{post.data.title}</h1>
       <div class="post-meta">
         <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+        {
+          showUpdated && (
+            <span>
+              · 更新于 <time datetime={updated.toISOString()}>{formatDate(updated)}</time>
+            </span>
+          )
+        }
+        <span>· {minutes} 分钟阅读</span>
         {
           post.data.categories.map((cat) => (
             <a class="tag" href={categoryPath(cat)}>

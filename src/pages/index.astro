@@ -2,20 +2,121 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostItem from '../components/PostItem.astro';
+import { sortPostsByDate, type Post } from '../utils/post';
 
-const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+const posts = sortPostsByDate(
+  await getCollection('posts', ({ data }) => !data.draft),
 );
+
+// 按年份分组（新→旧）
+const byYear = new Map<number, Post[]>();
+for (const post of posts) {
+  const y = post.data.date.getFullYear();
+  const arr = byYear.get(y);
+  if (arr) arr.push(post);
+  else byYear.set(y, [post]);
+}
+const groups = [...byYear.entries()];
 ---
 
 <BaseLayout>
-  <ul class="post-list">
+  <p class="search-wrap">
+    <input
+      id="post-filter"
+      class="post-filter"
+      type="search"
+      placeholder="搜索文章标题…"
+      aria-label="按标题搜索文章"
+      autocomplete="off"
+    />
+  </p>
+
+  <div class="archive">
     {
-      posts.map((post) => (
-        <li>
-          <PostItem post={post} />
-        </li>
+      groups.map(([year, list]) => (
+        <section class="archive-group" data-year={year}>
+          <h2 class="archive-year">{year}</h2>
+          <ul class="post-list">
+            {list.map((post) => (
+              <li data-title={post.data.title.toLowerCase()}>
+                <PostItem post={post} />
+              </li>
+            ))}
+          </ul>
+        </section>
       ))
     }
-  </ul>
+    <p class="archive-empty" hidden>
+      没有匹配的文章。
+    </p>
+  </div>
+
+  <script>
+    const input = document.getElementById('post-filter') as HTMLInputElement | null;
+    if (input) {
+      const items = Array.from(
+        document.querySelectorAll<HTMLElement>('.post-list li[data-title]'),
+      );
+      const groups = Array.from(
+        document.querySelectorAll<HTMLElement>('.archive-group'),
+      );
+      const empty = document.querySelector<HTMLElement>('.archive-empty');
+
+      const apply = () => {
+        const q = input.value.trim().toLowerCase();
+        let visible = 0;
+        for (const li of items) {
+          const hit = !q || (li.dataset.title ?? '').includes(q);
+          li.hidden = !hit;
+          if (hit) visible += 1;
+        }
+        for (const g of groups) {
+          const any = Array.from(g.querySelectorAll<HTMLElement>('li[data-title]')).some(
+            (li) => !li.hidden,
+          );
+          g.hidden = !any;
+        }
+        if (empty) empty.hidden = visible !== 0;
+      };
+
+      input.addEventListener('input', apply);
+    }
+  </script>
 </BaseLayout>
+
+<style>
+  .search-wrap {
+    margin: 0 0 1.5rem;
+  }
+
+  .post-filter {
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+  }
+
+  .post-filter:focus {
+    border-color: var(--accent);
+  }
+
+  .archive-year {
+    font-size: 1.1rem;
+    color: var(--fg-muted);
+    margin: 1.8rem 0 0.2rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .archive-group:first-of-type .archive-year {
+    margin-top: 0;
+  }
+
+  .archive-empty {
+    color: var(--fg-muted);
+    padding: 1rem 0;
+  }
+</style>
