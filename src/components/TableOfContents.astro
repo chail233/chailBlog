@@ -8,7 +8,7 @@ interface Props {
 const { headings } = Astro.props;
 // 只保留 h2~h4，跳过 h1（页面标题）与过深的层级
 const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
-const minDepth = Math.min(...items.map((h) => h.depth), 6);
+const minDepth = items.length ? Math.min(...items.map((h) => h.depth)) : 2;
 ---
 
 {
@@ -26,6 +26,60 @@ const minDepth = Math.min(...items.map((h) => h.depth), 6);
   )
 }
 
+<script>
+  // 目录滚动高亮：IntersectionObserver 监听正文标题，激活当前小节链接。
+  // 兼容 View Transitions：每次 astro:page-load 重建观察器（标题节点会随导航替换）。
+  let io: IntersectionObserver | null = null;
+
+  function setupTocSpy() {
+    if (io) {
+      io.disconnect();
+      io = null;
+    }
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>('.toc-list a[href^="#"]'),
+    );
+    if (!links.length) return;
+
+    const entries: { a: HTMLAnchorElement; el: HTMLElement }[] = [];
+    for (const a of links) {
+      const href = a.getAttribute('href') ?? '';
+      const id = decodeURIComponent(href.slice(1));
+      const el = document.getElementById(id);
+      if (el) entries.push({ a, el: el as HTMLElement });
+    }
+    if (!entries.length) return;
+
+    const elToLink = new Map(entries.map((e) => [e.el, e.a]));
+    const setActive = (link: HTMLAnchorElement | null) => {
+      for (const { a } of entries) a.classList.toggle('active', a === link);
+    };
+
+    const visible = new Set<HTMLElement>();
+    io = new IntersectionObserver(
+      (records) => {
+        for (const en of records) {
+          if (en.isIntersecting) visible.add(en.target as HTMLElement);
+          else visible.delete(en.target as HTMLElement);
+        }
+        // 取当前可见标题中最靠顶者
+        let top: HTMLElement | null = null;
+        for (const el of visible) {
+          if (top === null || el.getBoundingClientRect().top < top.getBoundingClientRect().top) {
+            top = el;
+          }
+        }
+        if (top) setActive(elToLink.get(top) ?? null);
+      },
+      { rootMargin: '-5rem 0px -65% 0px', threshold: 0 },
+    );
+    for (const { el } of entries) io.observe(el);
+  }
+
+  setupTocSpy();
+  document.addEventListener('astro:page-load', setupTocSpy);
+</script>
+
 <style>
   .toc {
     margin: 0 0 2rem;
@@ -41,6 +95,7 @@ const minDepth = Math.min(...items.map((h) => h.depth), 6);
     font-weight: 600;
     color: var(--fg);
     user-select: none;
+    font-family: var(--font-ui);
   }
 
   .toc-list {
@@ -57,10 +112,66 @@ const minDepth = Math.min(...items.map((h) => h.depth), 6);
   }
 
   .toc-list a {
+    position: relative;
     color: var(--fg-muted);
+    transition: color 0.15s ease;
   }
 
   .toc-list a:hover {
     color: var(--accent);
+  }
+
+  .toc-list a.active {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* 宽屏：目录变为正文左侧的固定栏 */
+  @media (min-width: 1280px) {
+    .toc {
+      position: fixed;
+      top: 6rem;
+      left: calc(50vw - 604px);
+      width: 200px;
+      max-height: calc(100vh - 9rem);
+      overflow-y: auto;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    .toc-title {
+      cursor: default;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      list-style: none;
+    }
+
+    .toc-title::-webkit-details-marker {
+      display: none;
+    }
+
+    .toc-list {
+      margin-top: 0.7rem;
+      border-left: 2px solid var(--border);
+      padding-left: 0.75rem;
+    }
+
+    .toc-list li {
+      padding-left: 0;
+    }
+
+    /* 缩进改由链接自身左偏移体现，保留层级竖条对齐 */
+    .toc-list a {
+      display: block;
+      margin-left: var(--indent, 0);
+    }
+
+    .toc-list a.active {
+      color: var(--accent);
+    }
   }
 </style>

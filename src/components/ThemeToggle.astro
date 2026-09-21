@@ -57,6 +57,7 @@
     color: var(--fg-muted);
     cursor: pointer;
     line-height: 1;
+    transition: color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
   }
 
   .theme-toggle:hover {
@@ -64,9 +65,18 @@
     border-color: var(--accent);
   }
 
+  .theme-toggle:active {
+    transform: scale(0.92);
+  }
+
   .icon {
     width: 1.05rem;
     height: 1.05rem;
+    transition: transform 0.4s ease;
+  }
+
+  .theme-toggle:hover .icon {
+    transform: rotate(28deg) scale(1.12);
   }
 
   .icon-sun {
@@ -85,17 +95,38 @@
 <script>
   const KEY = 'theme';
   const root = document.documentElement;
-  const btn = document.getElementById('theme-toggle');
 
-  btn?.addEventListener('click', () => {
+  const apply = (t: string) => root.setAttribute('data-theme', t);
+
+  // 当前应有主题：本地存储优先，否则跟随系统
+  const resolve = (): string => {
+    try {
+      return (
+        localStorage.getItem(KEY) ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light')
+      );
+    } catch {
+      return 'light';
+    }
+  };
+
+  // 事件委托：View Transitions 会替换按钮节点，绑在 document 上不会失效
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target || !target.closest('#theme-toggle')) return;
     const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
+    apply(next);
     try {
       localStorage.setItem(KEY, next);
     } catch {
       /* 忽略隐私模式下的写入异常 */
     }
   });
+
+  // 同文档导航后：在绘制前恢复主题，避免 morph 清掉 data-theme 导致深色消失
+  document.addEventListener('astro:after-swap', () => apply(resolve()));
 
   // 用户未显式选择时，跟随系统深浅色变化
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -106,6 +137,6 @@
     } catch {
       /* ignore */
     }
-    if (!stored) root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    if (!stored) apply(e.matches ? 'dark' : 'light');
   });
 </script>

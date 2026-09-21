@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { categoryPath, formatDate, postPath } from '../const';
+import { categoryClass, categoryPath, formatDate, postPath } from '../const';
 
 interface Props {
   post: CollectionEntry<'posts'>;
@@ -9,20 +9,24 @@ interface Props {
 const { post } = Astro.props;
 // 文件名可能含 [] 空格等字符，URL 需编码（统一走 postPath）
 const postUrl = postPath(post.id);
+const desc = post.data.description?.trim();
 ---
 
-<div class="post-row">
-  <time class="post-date" datetime={post.data.date.toISOString()}>
-    {formatDate(post.data.date)}
-  </time>
+<article class="post-card">
+  <div class="post-card-top">
+    <time class="post-date" datetime={post.data.date.toISOString()}>
+      {formatDate(post.data.date)}
+    </time>
+    <span class="tags">
+      {
+        post.data.categories.map((cat) => (
+          <a class={`tag ${categoryClass(cat)}`} href={categoryPath(cat)}>
+            {cat}
+          </a>
+        ))
+      }
+    </span>
+  </div>
   <a class="post-title" href={postUrl}>{post.data.title}</a>
-  <span class="tags">
-    {
-      post.data.categories.map((cat) => (
-        <a class="tag" href={categoryPath(cat)}>
-          {cat}
-        </a>
-      ))
-    }
-  </span>
-</div>
+  {desc && <p class="post-desc">{desc}</p>}
+</article>

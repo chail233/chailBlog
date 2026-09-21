@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostItem from '../components/PostItem.astro';
+import { CATEGORIES } from '../const';
 import { sortPostsByDate, type Post } from '../utils/post';
 
 const posts = sortPostsByDate(
@@ -17,15 +18,51 @@ for (const post of posts) {
   else byYear.set(y, [post]);
 }
 const groups = [...byYear.entries()];
+
+// 分类统计（用于 Hero）
+const counts = new Map<string, number>();
+for (const p of posts) {
+  for (const c of p.data.categories) counts.set(c, (counts.get(c) ?? 0) + 1);
+}
+const statItems = CATEGORIES.map((c) => ({
+  name: c.name,
+  slug: c.slug,
+  count: counts.get(c.name) ?? 0,
+}));
 ---
 
 <BaseLayout>
+  <section class="hero" aria-label="站点简介">
+    <p class="hero-eyebrow">CHAIL的云存档</p>
+    <h1 class="hero-title">
+      Love My Life & <span class="accent">Poetry</span>。
+    </h1>
+    <p class="hero-sub">
+      这里收录着我的学习笔记与日常随笔--欢迎你的访问。
+    </p>
+    <ul class="hero-stats">
+      <li class="hero-stat">
+        <span class="stat-num">{posts.length}</span>
+        <span class="stat-label">篇文章</span>
+      </li>
+      {
+        statItems.map((s) => (
+          <li class="hero-stat">
+            <span class="stat-num">{s.count}</span>
+            <span class="stat-label">{s.name}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
   <p class="search-wrap">
+    <span class="search-prompt" aria-hidden="true">$</span>
     <input
       id="post-filter"
       class="post-filter"
       type="search"
-      placeholder="搜索文章标题…"
+      placeholder="grep 文章标题…"
       aria-label="按标题搜索文章"
       autocomplete="off"
     />
@@ -35,7 +72,9 @@ const groups = [...byYear.entries()];
     {
       groups.map(([year, list]) => (
         <section class="archive-group" data-year={year}>
-          <h2 class="archive-year">{year}</h2>
+          <h2 class="archive-year">
+            <span class="comment">#</span> {year}
+          </h2>
           <ul class="post-list">
             {list.map((post) => (
               <li data-title={post.data.title.toLowerCase()}>
@@ -47,68 +86,154 @@ const groups = [...byYear.entries()];
       ))
     }
     <p class="archive-empty" hidden>
-      没有匹配的文章。
+      <span class="search-prompt" aria-hidden="true">$</span> 没有匹配的文章。
     </p>
   </div>
 
   <script>
-    const input = document.getElementById('post-filter') as HTMLInputElement | null;
-    if (input) {
+    // 使用 document 事件委托：View Transitions 后节点会被替换，
+    // 但 document 常驻，输入监听不会失效。
+    document.addEventListener('input', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target || target.id !== 'post-filter') return;
+      const q = (target as HTMLInputElement).value.trim().toLowerCase();
+
       const items = Array.from(
         document.querySelectorAll<HTMLElement>('.post-list li[data-title]'),
       );
-      const groups = Array.from(
+      const archiveGroups = Array.from(
         document.querySelectorAll<HTMLElement>('.archive-group'),
       );
       const empty = document.querySelector<HTMLElement>('.archive-empty');
 
-      const apply = () => {
-        const q = input.value.trim().toLowerCase();
-        let visible = 0;
-        for (const li of items) {
-          const hit = !q || (li.dataset.title ?? '').includes(q);
-          li.hidden = !hit;
-          if (hit) visible += 1;
-        }
-        for (const g of groups) {
-          const any = Array.from(g.querySelectorAll<HTMLElement>('li[data-title]')).some(
-            (li) => !li.hidden,
-          );
-          g.hidden = !any;
-        }
-        if (empty) empty.hidden = visible !== 0;
-      };
-
-      input.addEventListener('input', apply);
-    }
+      let visible = 0;
+      for (const li of items) {
+        const hit = !q || (li.dataset.title ?? '').includes(q);
+        li.hidden = !hit;
+        if (hit) visible += 1;
+      }
+      for (const g of archiveGroups) {
+        const any = Array.from(
+          g.querySelectorAll<HTMLElement>('li[data-title]'),
+        ).some((li) => !li.hidden);
+        g.hidden = !any;
+      }
+      if (empty) empty.hidden = visible !== 0;
+    });
   </script>
 </BaseLayout>
 
 <style>
+  .hero {
+    text-align: center;
+    padding: 1.5rem 0 2.25rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-eyebrow {
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.9rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.1rem, 7vw, 3.1rem);
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 1rem;
+  }
+
+  .hero-title .accent {
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    max-width: 34em;
+    margin: 0 auto 1.6rem;
+    color: var(--fg-muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+  }
+
+  .hero-stats {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 0.7rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    padding: 0.5rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .stat-num {
+    font-family: var(--font-ui);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+  }
+
   .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
     margin: 0 0 1.5rem;
   }
 
+  .search-prompt {
+    font-family: var(--font-ui);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
   .post-filter {
-    width: 100%;
+    flex: 1;
     padding: 0.6rem 0.9rem;
-    font-size: 0.95rem;
+    font-family: var(--font-ui);
+    font-size: 0.92rem;
     color: var(--fg);
-    background: var(--bg);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
     outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .post-filter:focus {
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
   }
 
   .archive-year {
-    font-size: 1.1rem;
-    color: var(--fg-muted);
-    margin: 1.8rem 0 0.2rem;
+    font-family: var(--font-ui);
+    font-size: 1.05rem;
+    color: var(--fg);
+    margin: 2rem 0 0.8rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  .archive-year .comment {
+    color: var(--fg-muted);
   }
 
   .archive-group:first-of-type .archive-year {
@@ -116,6 +241,10 @@ const groups = [...byYear.entries()];
   }
 
   .archive-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-ui);
     color: var(--fg-muted);
     padding: 1rem 0;
   }

@@ -13,6 +13,8 @@
     "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
+    "@callmebill/lxgw-wenkai-web": "^1.522.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "astro": "^7.3.3",
     "katex": "^0.18.7",
     "rehype-katex": "^7.0.1",

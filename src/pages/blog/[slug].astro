@@ -4,7 +4,8 @@ import type { CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import PostNav from '../../components/PostNav.astro';
-import { categoryPath, formatDate } from '../../const';
+import CodeEnhancements from '../../components/CodeEnhancements.astro';
+import { categoryClass, categoryPath, formatDate } from '../../const';
 import { sortPostsByDate, updatedDate, readingTime } from '../../utils/post';
 import 'katex/dist/katex.min.css';
 
@@ -49,9 +50,11 @@ const minutes = readingTime(post);
           )
         }
         <span>· {minutes} 分钟阅读</span>
+        <!-- 本文阅读量：不蒜子 page_pv，脚本自动填充 -->
+        <span>· 本文阅读 <span id="busuanzi_value_page_pv">–</span> 次</span>
         {
           post.data.categories.map((cat) => (
-            <a class="tag" href={categoryPath(cat)}>
+            <a class={`tag ${categoryClass(cat)}`} href={categoryPath(cat)}>
               {cat}
             </a>
           ))
@@ -62,4 +65,5 @@ const minutes = readingTime(post);
     <Content />
     <PostNav newer={newer} older={older} />
   </article>
+  <CodeEnhancements />
 </BaseLayout>

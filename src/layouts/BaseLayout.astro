@@ -1,6 +1,17 @@
 ---
-import { SITE_TITLE, SITE_DESCRIPTION, CATEGORIES } from '../const';
+import { ClientRouter } from 'astro:transitions';
+import '@fontsource-variable/jetbrains-mono';
+/* 霞鹜文楷等宽版：cn-font-split 按 unicode-range 分片，浏览器只下载页面用到的那几片 */
+import '@callmebill/lxgw-wenkai-web/lxgwwenkaimono-regular/result.css';
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_START_DATE, CATEGORIES } from '../const';
 import ThemeToggle from '../components/ThemeToggle.astro';
+
+const GITHUB_URL = 'https://github.com/chail233';
+const EMAIL = '1744315424@qq.com';
+const CODEFORCES_URL = 'https://codeforces.com/profile/chail233';
+const LUOGU_URL = 'https://www.luogu.com.cn/user/1940369';
+const WECHAT_URL =
+  'https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzY0MDA2NjE3OA==&scene=124#wechat_redirect';
 
 interface Props {
   title?: string;
@@ -19,6 +30,10 @@ const path = Astro.url.pathname;
 // canonical / og:url 用站点绝对 URL（依赖 astro.config 的 site）
 const canonical = new URL(path, Astro.site).href;
 const rssUrl = new URL('rss.xml', Astro.site).href;
+// 已运行天数（含建站当天）：构建时值作为无 JS 兜底，客户端脚本会按访问时刻实时更新
+const MS_PER_DAY = 86400000;
+const startMs = new Date(`${SITE_START_DATE}T00:00:00`).getTime();
+const siteDays = Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1);
 ---
 
 <!doctype html>
@@ -26,7 +41,8 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <!-- 主题初始化：在首屏绘制前设定 data-theme，避免深浅色切换闪烁(FOUC) -->
-    <script is:inline>
+    <!-- data-astro-rerun：同文档导航(视口过渡)后重新执行，确保 data-theme 不被 morph 丢失 -->
+    <script is:inline data-astro-rerun>
       (() => {
         let t;
         try {
@@ -42,10 +58,18 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         document.documentElement.setAttribute('data-theme', t);
       })();
     </script>
+    <!-- 滚动揭示开关：仅当未开启“减弱动效”时标记 html.js-reveal（首屏绘制前，无闪烁） -->
+    <script is:inline>
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('js-reveal');
+      }
+    </script>
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+    <!-- 页面切换过渡（View Transitions）：同文档导航平滑淡入 -->
+    <ClientRouter />
 
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -71,15 +95,20 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       <style is:global>
         @media (prefers-color-scheme: dark) {
           :root {
-            --fg: #e6edf3;
-            --fg-muted: #8b949e;
-            --bg: #0d1117;
-            --bg-soft: #1f242c;
-            --border: #30363d;
-            --accent: #58a6ff;
-            --tag-bg: #1c2541;
-            --tag-fg: #b5c7ff;
-            --header-bg: rgba(13, 17, 23, 0.92);
+            --fg: #c9d1d9;
+            --fg-muted: #7d8590;
+            --bg: #0b0f14;
+            --bg-soft: #131a22;
+            --bg-card: rgba(16, 22, 29, 0.5);
+            --border: #232b33;
+            --accent: #3ddc84;
+            --tag-bg: #0e2a1c;
+            --tag-fg: #56d364;
+            --header-bg: rgba(11, 15, 20, 0.82);
+            --grid: rgba(61, 220, 132, 0.06);
+            --glow: rgba(61, 220, 132, 0.36);
+            --glow-2: rgba(88, 166, 255, 0.28);
+            --noise: 0.05;
             color-scheme: dark;
           }
           .astro-code,
@@ -92,6 +121,11 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
     </noscript>
   </head>
   <body>
+    <div class="aurora" aria-hidden="true">
+      <span class="aurora__blob aurora__blob--a"></span>
+      <span class="aurora__blob aurora__blob--b"></span>
+      <span class="aurora__blob aurora__blob--c"></span>
+    </div>
     <header class="site-header">
       <div class="container nav-row">
         <a href="/" class="site-title">{SITE_TITLE}</a>
@@ -123,20 +157,62 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
     </main>
 
     <footer class="site-footer">
-      <div class="container">© {new Date().getFullYear()} chail · Powered by Astro</div>
+      <div class="container footer-row">
+        <span class="footer-copy">
+          © {new Date().getFullYear()} chail · <span class="muted">Powered by Astro</span> · <span class="muted">已运行 <span id="site-days">{siteDays}</span> 天 · 访问 <span id="busuanzi_value_site_pv">–</span> 次 · <span id="busuanzi_value_site_uv">–</span> 位访客</span>
+        </span>
+        <nav class="footer-links" aria-label="社交链接">
+          <a href={GITHUB_URL} rel="me noopener" target="_blank" title="GitHub" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.4-1.27.73-1.56-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+          </a>
+          <a href={CODEFORCES_URL} rel="me noopener" target="_blank" title="Codeforces" aria-label="Codeforces">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </a>
+          <a href={LUOGU_URL} rel="me noopener" target="_blank" title="洛谷" aria-label="洛谷">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </a>
+          <a href={WECHAT_URL} rel="noopener" target="_blank" title="微信公众号" aria-label="微信公众号">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </a>
+          <a href="/rss.xml" title="RSS" aria-label="RSS">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9h2.5A11.5 11.5 0 0 0 4 8.5V11z"/><path d="M4 4a16 16 0 0 1 16 16h2.5A18.5 18.5 0 0 0 4 1.5V4z"/><circle cx="6" cy="18" r="2"/></svg>
+          </a>
+          <a href={`mailto:${EMAIL}`} title="Email" aria-label="Email">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          </a>
+        </nav>
+      </div>
     </footer>
 
     <style is:global>
       :root {
         --fg: #1f2328;
-        --fg-muted: #6b7280;
-        --bg: #ffffff;
-        --bg-soft: #f3f4f6;
-        --border: #e5e7eb;
-        --accent: #2563eb;
-        --tag-bg: #eef2ff;
-        --tag-fg: #4338ca;
-        --header-bg: rgba(255, 255, 255, 0.92);
+        --fg-muted: #57606a;
+        --bg: #eef1f4;
+        --bg-soft: #e6ecf2;
+        --bg-card: rgba(255, 255, 255, 0.6);
+        --border: #d0d7de;
+        --accent: #0b7a4b;
+        --tag-bg: #e6f4ec;
+        --tag-fg: #0b6e46;
+        --header-bg: rgba(238, 241, 244, 0.8);
+        --grid: rgba(11, 122, 75, 0.08);
+        --glow: rgba(11, 122, 75, 0.34);
+        --glow-2: rgba(9, 105, 218, 0.26);
+        --noise: 0.04;
+        --shadow: 0 1px 2px rgba(31, 35, 40, 0.06), 0 8px 24px rgba(31, 35, 40, 0.06);
+        /* 分类色 */
+        --acm: #0969da;
+        --acm-bg: #e7f0fb;
+        --waiwubao: #9a6700;
+        --waiwubao-bg: #fbf0dc;
+        /* 字体：全站等宽风——西文/数字用 JetBrains Mono，中文用霞鹜文楷等宽（1:2 对齐） */
+        --font-ui: 'JetBrains Mono Variable', 'JetBrains Mono', 'LXGW WenKai Mono',
+          'Cascadia Code', ui-monospace, 'SFMono-Regular',
+          Consolas, 'Sarasa Mono SC', 'Microsoft YaHei', monospace;
+        --font-body: 'JetBrains Mono Variable', 'JetBrains Mono', 'LXGW WenKai Mono',
+          'Cascadia Code', ui-monospace, 'SFMono-Regular', Consolas,
+          'Microsoft YaHei', 'PingFang SC', monospace;
         /* Shiki 双主题变量兜底：运行时由 Shiki 在每个 pre/span 内联覆盖为具体颜色 */
         --shiki-dark: #e6edf3;
         --shiki-dark-bg: #0d1117;
@@ -145,15 +221,25 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
 
       /* 深色模式：由 data-theme 属性驱动（内联脚本根据本地存储/系统偏好设定） */
       :root[data-theme="dark"] {
-        --fg: #e6edf3;
-        --fg-muted: #8b949e;
-        --bg: #0d1117;
-        --bg-soft: #1f242c;
-        --border: #30363d;
-        --accent: #58a6ff;
-        --tag-bg: #1c2541;
-        --tag-fg: #b5c7ff;
-        --header-bg: rgba(13, 17, 23, 0.92);
+        --fg: #c9d1d9;
+        --fg-muted: #7d8590;
+        --bg: #0b0f14;
+        --bg-soft: #131a22;
+        --bg-card: rgba(16, 22, 29, 0.5);
+        --border: #232b33;
+        --accent: #3ddc84;
+        --tag-bg: #0e2a1c;
+        --tag-fg: #56d364;
+        --header-bg: rgba(11, 15, 20, 0.82);
+        --grid: rgba(61, 220, 132, 0.06);
+        --glow: rgba(61, 220, 132, 0.36);
+        --glow-2: rgba(88, 166, 255, 0.28);
+        --noise: 0.05;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.45);
+        --acm: #58a6ff;
+        --acm-bg: #12283f;
+        --waiwubao: #d29922;
+        --waiwubao-bg: #2b2210;
         color-scheme: dark;
       }
 
@@ -161,13 +247,175 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         box-sizing: border-box;
       }
 
+      /* 确保 hidden 属性能覆盖组件上的 display（卡片 li 用了 display:flex） */
+      [hidden] {
+        display: none !important;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
       body {
         margin: 0;
         color: var(--fg);
-        background: var(--bg);
-        font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',
-          'Helvetica Neue', Arial, sans-serif;
+        font-family: var(--font-body);
         line-height: 1.7;
+        /* A. 底色竖向渐变，摆脱纯色 */
+        background-color: var(--bg);
+        background-image: linear-gradient(
+          180deg,
+          var(--bg) 0%,
+          var(--bg-soft) 100%
+        );
+        background-attachment: fixed;
+        min-height: 100vh;
+        position: relative;
+      }
+
+      /* B + C：全屏弱网格（静态底纹；色彩光晕由 .aurora 漂移层负责） */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 34px 34px;
+      }
+
+      /* D：极淡灰噪点颗粒，去掉纯色的塑料感 */
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: var(--noise);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      /* E：深色模式专属——网格层叠加一层极淡 CRT 扫描线 */
+      :root[data-theme="dark"] body::before {
+        background-image:
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.025) 0px,
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px,
+            transparent 3px
+          ),
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 100% 100%, 34px 34px, 34px 34px;
+      }
+
+      /* 极光动效：三团缓慢漂移的柔光（GPU transform，独立于网格层） */
+      .aurora {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .aurora__blob {
+        position: absolute;
+        width: 55vmax;
+        height: 55vmax;
+        border-radius: 50%;
+        filter: blur(70px);
+        opacity: 0.55;
+        will-change: transform;
+      }
+
+      .aurora__blob--a {
+        top: -18%;
+        left: -12%;
+        background: radial-gradient(circle, var(--glow), transparent 68%);
+        animation: drift-a 26s ease-in-out infinite;
+      }
+
+      .aurora__blob--b {
+        top: -12%;
+        right: -14%;
+        background: radial-gradient(
+          circle,
+          var(--glow-2, transparent),
+          transparent 68%
+        );
+        animation: drift-b 34s ease-in-out infinite;
+      }
+
+      .aurora__blob--c {
+        bottom: -26%;
+        left: 24%;
+        background: radial-gradient(circle, var(--glow), transparent 68%);
+        animation: drift-c 40s ease-in-out infinite;
+      }
+
+      :root[data-theme="dark"] .aurora__blob {
+        opacity: 0.6;
+      }
+
+      @keyframes drift-a {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        50% {
+          transform: translate(10vw, 8vh) scale(1.18);
+        }
+      }
+
+      @keyframes drift-b {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        50% {
+          transform: translate(-8vw, 10vh) scale(1.12);
+        }
+      }
+
+      @keyframes drift-c {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        50% {
+          transform: translate(6vw, -10vh) scale(1.2);
+        }
+      }
+
+      /* 主题平滑过渡 */
+      body,
+      .site-header,
+      .post-card,
+      .toc,
+      .tag,
+      .theme-toggle,
+      .site-footer {
+        transition: background-color 0.35s ease, border-color 0.35s ease,
+          color 0.2s ease;
+      }
+
+      /* 让内容浮在背景网格之上 */
+      .site-header,
+      main,
+      .site-footer {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* 玻璃拟态：面板半透明 + 背景模糊，让光晕/网格/噪点透出，避免死白 */
+      .post-card,
+      .post-filter,
+      .hero-stat {
+        -webkit-backdrop-filter: blur(9px) saturate(1.15);
+        backdrop-filter: blur(9px) saturate(1.15);
       }
 
       .container {
@@ -196,6 +444,7 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         border-bottom: 1px solid var(--border);
         position: sticky;
         top: 0;
+        z-index: 100;
         background: var(--header-bg);
         backdrop-filter: blur(6px);
       }
@@ -211,9 +460,11 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       }
 
       .site-title {
-        font-size: 1.25rem;
+        font-family: var(--font-ui);
+        font-size: 1.15rem;
         font-weight: 700;
         color: var(--fg);
+        letter-spacing: -0.01em;
       }
 
       .site-title:hover {
@@ -233,55 +484,126 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       }
 
       .site-header nav a {
+        font-family: var(--font-ui);
         color: var(--fg-muted);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
       }
 
-      .site-header nav a:hover,
+      .site-header nav a:hover {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
       .site-header nav a.active {
         color: var(--accent);
         text-decoration: none;
       }
 
-      /* 文章列表 */
+      .site-header nav a.active::before {
+        content: '[';
+        margin-right: 0.15em;
+      }
+
+      .site-header nav a.active::after {
+        content: ']';
+        margin-left: 0.15em;
+      }
+
+      /* 文章列表：响应式卡片网格 */
       .post-list {
         list-style: none;
         margin: 0;
         padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
       }
 
       .post-list li {
-        padding: 0.9rem 0;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .post-list li:last-child {
-        border-bottom: none;
-      }
-
-      .post-row {
         display: flex;
-        align-items: baseline;
-        gap: 0.9rem;
-        flex-wrap: wrap;
+      }
+
+      .post-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 1rem 1.1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.18s ease, border-color 0.18s ease,
+          box-shadow 0.18s ease, background-color 0.35s ease;
+      }
+
+      /* 左侧终端式强调色竖条 */
+      .post-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent);
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
+      .post-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent);
+        box-shadow: var(--shadow);
+      }
+
+      .post-card:hover::before {
+        opacity: 1;
+      }
+
+      .post-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
       }
 
       .post-date {
+        font-family: var(--font-ui);
         color: var(--fg-muted);
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
       }
 
       .post-title {
-        font-size: 1.05rem;
+        font-family: var(--font-ui);
+        font-size: 1rem;
         font-weight: 600;
+        line-height: 1.45;
         color: var(--fg);
+      }
+
+      .post-title::before {
+        content: '\25B8 ';
+        color: var(--accent);
       }
 
       .post-title:hover {
         color: var(--accent);
         text-decoration: none;
+      }
+
+      .post-desc {
+        margin: 0;
+        color: var(--fg-muted);
+        font-size: 0.86rem;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
 
       .tags {
@@ -291,18 +613,30 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       }
 
       .tag {
+        font-family: var(--font-ui);
         background: var(--tag-bg);
         color: var(--tag-fg);
-        font-size: 0.78rem;
+        font-size: 0.72rem;
         line-height: 1;
-        padding: 0.35rem 0.6rem;
-        border-radius: 999px;
+        padding: 0.32rem 0.55rem;
+        border-radius: 5px;
         white-space: nowrap;
       }
 
       .tag:hover {
         text-decoration: none;
-        filter: brightness(0.95);
+        filter: brightness(0.96);
+      }
+
+      /* 分类配色 */
+      .tag--acm {
+        background: var(--acm-bg);
+        color: var(--acm);
+      }
+
+      .tag--waiwubao {
+        background: var(--waiwubao-bg);
+        color: var(--waiwubao);
       }
 
       /* 文章页 */
@@ -311,25 +645,40 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       }
 
       .post-header h1 {
+        font-family: var(--font-ui);
         font-size: 1.7rem;
         line-height: 1.4;
         margin: 0 0 0.6rem;
       }
 
+      .post-header h1::before {
+        content: '# ';
+        color: var(--accent);
+      }
+
       .post-meta {
+        font-family: var(--font-ui);
         display: flex;
         align-items: center;
         gap: 0.8rem;
         flex-wrap: wrap;
         color: var(--fg-muted);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
       }
 
       article.prose h1,
       article.prose h2,
-      article.prose h3 {
+      article.prose h3,
+      article.prose h4 {
         line-height: 1.4;
         margin-top: 1.8em;
+        /* 锚点/TOC 跳转时避开吸顶 header，标题不被遮挡 */
+        scroll-margin-top: 5rem;
+      }
+
+      /* 目录等带 #id 的锚点目标统一留出顶栏空间 */
+      article.prose [id] {
+        scroll-margin-top: 5rem;
       }
 
       article.prose img {
@@ -372,6 +721,7 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       }
 
       .page-title {
+        font-family: var(--font-ui);
         margin-top: 0;
       }
 
@@ -379,9 +729,280 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         border-top: 1px solid var(--border);
         color: var(--fg-muted);
         font-size: 0.85rem;
-        padding: 1.25rem 0;
-        text-align: center;
+        padding: 1.5rem 0;
+      }
+
+      .footer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.6rem 1rem;
+      }
+
+      .footer-copy .muted {
+        color: var(--fg-muted);
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 0.9rem;
+      }
+
+      .footer-links a {
+        display: inline-flex;
+        color: var(--fg-muted);
+      }
+
+      .footer-links a:hover {
+        color: var(--accent);
+      }
+
+      /* ===== 全站微动效（进场 + 悬停），保持克制 ===== */
+
+      /* 进场：淡入上移（Hero 与列表卡片共用） */
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .hero-eyebrow {
+        animation: rise-in 0.5s ease both;
+      }
+
+      .hero-title {
+        animation: rise-in 0.5s ease 0.06s both;
+      }
+
+      .hero-sub {
+        animation: rise-in 0.5s ease 0.12s both;
+      }
+
+      .hero-stats {
+        animation: rise-in 0.5s ease 0.18s both;
+      }
+
+      /* 文章页头部：同样淡入上移 */
+      .post-header {
+        animation: rise-in 0.5s ease both;
+      }
+
+      /* 滚动揭示：卡片/年份标题进入视口才淡入上浮（位移更大、逐批错峰，动效更明显） */
+      /* 仅在 html.js-reveal（JS 可用）时隐藏初始态，保证无 JS 直接可见且不闪烁 */
+      .js-reveal .post-list li,
+      .js-reveal .archive-year {
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+          transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+
+      .js-reveal .post-list li.reveal-in,
+      .js-reveal .archive-year.reveal-in {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* 终端光标：标题末尾闪烁方块 */
+      .hero-title::after {
+        content: '\258D';
+        display: inline-block;
+        margin-left: 0.12em;
+        color: var(--accent);
+        transform: translateY(0.02em);
+        animation: caret-blink 1.1s steps(1, end) infinite;
+      }
+
+      @keyframes caret-blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        50.01%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      /* 导航链接：悬停下划线从左向右生长（.active 用方括号，排除） */
+      .site-header nav a:not(.active) {
+        position: relative;
+      }
+
+      .site-header nav a:not(.active)::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -4px;
+        height: 2px;
+        background: var(--accent);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.22s ease;
+      }
+
+      .site-header nav a:not(.active):hover::after {
+        transform: scaleX(1);
+      }
+
+      /* 标签：悬停轻微上浮 */
+      .tag {
+        transition: transform 0.15s ease, filter 0.15s ease,
+          background-color 0.35s ease;
+      }
+
+      .tag:hover {
+        transform: translateY(-1px);
+      }
+
+      /* 卡片标题指示符：悬停时向右轻推 */
+      .post-title::before {
+        display: inline-block;
+        transition: transform 0.18s ease;
+      }
+
+      .post-card:hover .post-title::before {
+        transform: translateX(3px);
+      }
+
+      /* View Transitions：页面切换淡入 + 轻微上移 */
+      @keyframes vt-fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      ::view-transition-old(root) {
+        animation: none;
+      }
+
+      ::view-transition-new(root) {
+        animation: vt-fade-in 0.32s ease both;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          transition-duration: 0.001ms !important;
+        }
+
+        html {
+          scroll-behavior: auto;
+        }
+
+        .aurora__blob {
+          animation: none !important;
+        }
+
+        .hero-eyebrow,
+        .hero-title,
+        .hero-sub,
+        .hero-stats,
+        .post-header {
+          animation: none !important;
+        }
+
+        .js-reveal .post-list li,
+        .js-reveal .archive-year {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+
+        .hero-title::after {
+          animation: none !important;
+          opacity: 1;
+        }
       }
     </style>
+
+    <script>
+      // 滚动揭示：进入视口的卡片/年份标题淡入上浮。
+      // 兼容 View Transitions：每次 astro:page-load 重建 IntersectionObserver（节点会随导航替换）。
+      let revealIO: IntersectionObserver | null = null;
+
+      function setupReveal() {
+        // 未标记 js-reveal（无 JS 或减弱动效）时，内容本就可见，无需处理
+        if (!document.documentElement.classList.contains('js-reveal')) return;
+
+        if (revealIO) {
+          revealIO.disconnect();
+          revealIO = null;
+        }
+
+        const targets = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '.post-list li:not(.reveal-in), .archive-year:not(.reveal-in)',
+          ),
+        );
+        if (!targets.length) return;
+
+        revealIO = new IntersectionObserver(
+          (entries) => {
+            // 同批进入视口的元素按位置排序，逐个加 70ms 延迟形成错峰
+            const hit = entries
+              .filter((e) => e.isIntersecting)
+              .sort(
+                (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+              );
+            for (let i = 0; i < hit.length; i++) {
+              const el = hit[i].target as HTMLElement;
+              el.style.transitionDelay = `${i * 70}ms`;
+              el.classList.add('reveal-in');
+              revealIO?.unobserve(el);
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.1 },
+        );
+
+        for (const el of targets) revealIO.observe(el);
+      }
+
+      setupReveal();
+      document.addEventListener('astro:page-load', setupReveal);
+    </script>
+
+    <!-- 访问统计（不蒜子）：自动填充页脚/文章页的 PV、UV 占位元素 -->
+    <script is:inline async data-busuanzi src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <script is:inline define:vars={{ siteStart: SITE_START_DATE }}>
+      (() => {
+        // 已运行天数：按访客本地时间计算，跨天无需重新构建
+        const updateDays = () => {
+          const el = document.getElementById('site-days');
+          if (!el) return;
+          const days = Math.max(
+            1,
+            Math.floor(
+              (Date.now() - new Date(siteStart + 'T00:00:00').getTime()) /
+                86400000,
+            ) + 1,
+          );
+          el.textContent = String(days);
+        };
+        updateDays();
+        document.addEventListener('astro:page-load', updateDays);
+
+        // View Transitions 导航后新 body 里的脚本不会自动执行，
+        // 克隆重新插入以触发不蒜子重新取数并计数新页面 PV
+        document.addEventListener('astro:after-swap', () => {
+          const s = document.querySelector('script[data-busuanzi]');
+          if (s) s.replaceWith(s.cloneNode(true));
+        });
+      })();
+    </script>
   </body>
 </html>

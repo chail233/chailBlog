@@ -1,0 +1,140 @@
+---
+/**
+ * 代码块增强：为正文里的每个 <pre class="astro-code"> 添加
+ * 「语言标签 + 复制按钮」的顶部工具条。
+ * 纯客户端实现，兼容 View Transitions（同文档导航后重新处理新节点）。
+ */
+---
+
+<script>
+  // 包裹单个 pre：插入 .code-block 容器与顶部工具条
+  function enhancePre(pre: HTMLPreElement) {
+    // 已处理过则跳过（避免重复包裹）
+    if (pre.parentElement?.classList.contains('code-block')) return;
+
+    const lang = (pre.getAttribute('data-language') || 'code').toLowerCase();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block';
+
+    const bar = document.createElement('div');
+    bar.className = 'code-bar';
+    bar.innerHTML =
+      `<span class="code-lang">${lang}</span>` +
+      `<button class="code-copy" type="button" aria-label="复制代码">复制</button>`;
+
+    pre.parentNode?.insertBefore(wrapper, pre);
+    wrapper.appendChild(bar);
+    wrapper.appendChild(pre);
+  }
+
+  function enhanceAll() {
+    document
+      .querySelectorAll<HTMLPreElement>('article.prose pre.astro-code')
+      .forEach(enhancePre);
+  }
+
+  // 复制：事件委托，按钮节点随导航重建也不会失效
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>(
+      '.code-copy',
+    );
+    if (!btn) return;
+    const block = btn.closest('.code-block');
+    const pre = block?.querySelector('pre');
+    if (!pre) return;
+    const text = pre.innerText;
+    const done = () => {
+      btn.textContent = '已复制';
+      btn.classList.add('copied');
+      window.setTimeout(() => {
+        btn.textContent = '复制';
+        btn.classList.remove('copied');
+      }, 1500);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => {
+        /* 剪贴板不可用时静默失败 */
+      });
+    } else {
+      // 回退：临时 textarea + execCommand
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        done();
+      } catch {
+        /* ignore */
+      }
+      document.body.removeChild(ta);
+    }
+  });
+
+  // 初次加载与每次同文档导航后都重新处理
+  enhanceAll();
+  document.addEventListener('astro:page-load', enhanceAll);
+</script>
+
+<style is:global>
+  article.prose .code-block {
+    margin: 1.4em 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-soft);
+  }
+
+  article.prose .code-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.5rem 0.4rem 0.9rem;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+  }
+
+  article.prose .code-lang {
+    color: var(--fg-muted);
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+  }
+
+  article.prose .code-lang::before {
+    content: '\25B8 ';
+    color: var(--accent);
+  }
+
+  article.prose .code-copy {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    color: var(--fg-muted);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  article.prose .code-copy:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  article.prose .code-copy.copied {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* 代码本体：去掉自身外边距与圆角，交由容器控制 */
+  article.prose .code-block pre {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+  }
+</style>
