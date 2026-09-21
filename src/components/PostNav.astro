@@ -1,0 +1,82 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { postPath } from '../const';
+
+interface Props {
+  /** 较新的一篇 */
+  newer?: CollectionEntry<'posts'> | null;
+  /** 较旧的一篇 */
+  older?: CollectionEntry<'posts'> | null;
+}
+
+const { newer = null, older = null } = Astro.props;
+---
+
+{
+  (newer || older) && (
+    <nav class="post-nav" aria-label="上下篇">
+      <div class="post-nav-cell">
+        {older && (
+          <a href={postPath(older.id)} class="post-nav-link" rel="prev">
+            <span class="post-nav-label">← 上一篇</span>
+            <span class="post-nav-title">{older.data.title}</span>
+          </a>
+        )}
+      </div>
+      <div class="post-nav-cell right">
+        {newer && (
+          <a href={postPath(newer.id)} class="post-nav-link" rel="next">
+            <span class="post-nav-label">下一篇 →</span>
+            <span class="post-nav-title">{newer.data.title}</span>
+          </a>
+        )}
+      </div>
+    </nav>
+  )
+}
+
+<style>
+  .post-nav {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .post-nav-cell {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .post-nav-cell.right {
+    text-align: right;
+  }
+
+  .post-nav-link {
+    display: inline-block;
+    max-width: 100%;
+  }
+
+  .post-nav-label {
+    display: block;
+    color: var(--fg-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .post-nav-title {
+    display: block;
+    color: var(--fg);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .post-nav-link:hover .post-nav-title {
+    color: var(--accent);
+    text-decoration: none;
+  }
+</style>

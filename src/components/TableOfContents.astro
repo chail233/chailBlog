@@ -1,0 +1,64 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+// 只保留 h2~h4，跳过 h1（页面标题）与过深的层级
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+const minDepth = Math.min(...items.map((h) => h.depth), 6);
+---
+
+{
+  items.length > 0 && (
+    <details class="toc" open>
+      <summary class="toc-title">目录</summary>
+      <ul class="toc-list">
+        {items.map((h) => (
+          <li style={{ '--indent': `${(h.depth - minDepth) * 0.9}rem` }}>
+            <a href={`#${h.slug}`}>{h.text}</a>
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
+}
+
+<style>
+  .toc {
+    margin: 0 0 2rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft);
+    font-size: 0.92rem;
+  }
+
+  .toc-title {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--fg);
+    user-select: none;
+  }
+
+  .toc-list {
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0;
+  }
+
+  .toc-list li {
+    margin: 0.3rem 0;
+    padding-left: var(--indent, 0);
+  }
+
+  .toc-list a {
+    color: var(--fg-muted);
+  }
+
+  .toc-list a:hover {
+    color: var(--accent);
+  }
+</style>

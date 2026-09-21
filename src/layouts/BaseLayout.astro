@@ -85,10 +85,29 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         --fg: #1f2328;
         --fg-muted: #6b7280;
         --bg: #ffffff;
+        --bg-soft: #f3f4f6;
         --border: #e5e7eb;
         --accent: #2563eb;
         --tag-bg: #eef2ff;
         --tag-fg: #4338ca;
+        --header-bg: rgba(255, 255, 255, 0.92);
+        color-scheme: light;
+      }
+
+      /* 深色模式：跟随系统偏好，配合下方 .astro-code 的 Shiki 双主题变量 */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #e6edf3;
+          --fg-muted: #8b949e;
+          --bg: #0d1117;
+          --bg-soft: #1f242c;
+          --border: #30363d;
+          --accent: #58a6ff;
+          --tag-bg: #1c2541;
+          --tag-fg: #b5c7ff;
+          --header-bg: rgba(13, 17, 23, 0.92);
+          color-scheme: dark;
+        }
       }
 
       * {
@@ -130,7 +149,7 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         border-bottom: 1px solid var(--border);
         position: sticky;
         top: 0;
-        background: rgba(255, 255, 255, 0.92);
+        background: var(--header-bg);
         backdrop-filter: blur(6px);
       }
 
@@ -272,10 +291,19 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       }
 
       article.prose code:not(pre code) {
-        background: #f3f4f6;
+        background: var(--bg-soft);
         padding: 0.15em 0.4em;
         border-radius: 4px;
         font-size: 0.9em;
+      }
+
+      /* Shiki 双主题：浅色作为内联默认色，深色时用 --shiki-dark 变量覆盖 */
+      @media (prefers-color-scheme: dark) {
+        .astro-code,
+        .astro-code span {
+          color: var(--shiki-dark) !important;
+          background-color: var(--shiki-dark-bg) !important;
+        }
       }
 
       article.prose blockquote {

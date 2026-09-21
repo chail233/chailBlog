@@ -18,9 +18,12 @@ export default defineConfig({
       // 用 KaTeX 渲染；容忍文章中混入的中文，不因单个公式报错中断构建
       rehypePlugins: [[rehypeKatex, { strict: false, throwOnError: false }]],
     }),
-    // 代码块高亮（内置 Shiki），单主题直接内联着色，无需额外 CSS
+    // 代码块高亮（内置 Shiki）：配置双主题，配合 BaseLayout 的 CSS 变量随系统深浅色切换
     shikiConfig: {
-      theme: 'github-light',
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark',
+      },
     },
   },
 });
