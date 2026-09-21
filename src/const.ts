@@ -19,3 +19,8 @@ export function formatDate(date: Date): string {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+/** 文章页相对路径；id 可能含 [] 空格等字符，需 URL 编码 */
+export function postPath(id: string): string {
+  return `/blog/${encodeURIComponent(id)}`;
+}

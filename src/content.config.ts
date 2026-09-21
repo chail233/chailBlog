@@ -12,6 +12,8 @@ const posts = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
+    // 文章摘要：用于列表页、RSS 与 OG 卡片；缺省时回退到站点描述
+    description: z.string().optional(),
     draft: z.boolean().default(false),
     categories: z.array(z.string()).default([]),
   }),

@@ -17,7 +17,11 @@ const { post } = Astro.props as { post: CollectionEntry<'posts'> };
 const { Content } = await render(post);
 ---
 
-<BaseLayout title={post.data.title}>
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+>
   <article class="prose">
     <header class="post-header">
       <h1>{post.data.title}</h1>

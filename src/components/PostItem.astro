@@ -1,14 +1,14 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { categoryPath, formatDate } from '../const';
+import { categoryPath, formatDate, postPath } from '../const';
 
 interface Props {
   post: CollectionEntry<'posts'>;
 }
 
 const { post } = Astro.props;
-// 文件名可能含 [] 空格等字符，URL 需编码
-const postUrl = `/blog/${encodeURIComponent(post.id)}`;
+// 文件名可能含 [] 空格等字符，URL 需编码（统一走 postPath）
+const postUrl = postPath(post.id);
 ---
 
 <div class="post-row">

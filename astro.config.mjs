@@ -1,10 +1,14 @@
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 // https://astro.build/config
 export default defineConfig({
+  // 站点绝对 URL：sitemap / RSS / canonical / OG 依赖它生成绝对链接
+  site: 'https://chail.tech',
+  integrations: [sitemap()],
   markdown: {
     // Astro 7 默认处理器为 Sätteri；因 KaTeX 渲染依赖 unified 生态插件，
     // 这里显式声明走 unified 管线（官方推荐、非废弃写法）。

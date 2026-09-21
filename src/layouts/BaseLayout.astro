@@ -3,11 +3,21 @@ import { SITE_TITLE, SITE_DESCRIPTION, CATEGORIES } from '../const';
 
 interface Props {
   title?: string;
+  description?: string;
+  /** 文章页传 article，其余默认 website */
+  type?: 'website' | 'article';
 }
 
-const { title } = Astro.props;
+const {
+  title,
+  description = SITE_DESCRIPTION,
+  type = 'website',
+} = Astro.props;
 const pageTitle = title ? `${title} | ${SITE_TITLE}` : SITE_TITLE;
-const path = Astro.pathname;
+const path = Astro.url.pathname;
+// canonical / og:url 用站点绝对 URL（依赖 astro.config 的 site）
+const canonical = new URL(path, Astro.site).href;
+const rssUrl = new URL('rss.xml', Astro.site).href;
 ---
 
 <!doctype html>
@@ -15,9 +25,28 @@ const path = Astro.pathname;
   <head>
     <meta charset="utf-8" />
     <title>{pageTitle}</title>
-    <meta name="description" content={SITE_DESCRIPTION} />
+    <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={SITE_TITLE}
+      href={rssUrl}
+    />
+
+    <!-- Open Graph / 社交分享卡片 -->
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
   </head>
   <body>
     <header class="site-header">
