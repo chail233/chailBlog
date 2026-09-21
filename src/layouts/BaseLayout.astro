@@ -1,5 +1,6 @@
 ---
 import { SITE_TITLE, SITE_DESCRIPTION, CATEGORIES } from '../const';
+import ThemeToggle from '../components/ThemeToggle.astro';
 
 interface Props {
   title?: string;
@@ -24,6 +25,23 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
+    <!-- 主题初始化：在首屏绘制前设定 data-theme，避免深浅色切换闪烁(FOUC) -->
+    <script is:inline>
+      (() => {
+        let t;
+        try {
+          const s = localStorage.getItem('theme');
+          t =
+            s ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light');
+        } catch {
+          t = 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width" />
@@ -47,28 +65,56 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
+
+    <!-- 禁用 JS 时，回退到跟随系统的深色模式 -->
+    <noscript>
+      <style is:global>
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --fg: #e6edf3;
+            --fg-muted: #8b949e;
+            --bg: #0d1117;
+            --bg-soft: #1f242c;
+            --border: #30363d;
+            --accent: #58a6ff;
+            --tag-bg: #1c2541;
+            --tag-fg: #b5c7ff;
+            --header-bg: rgba(13, 17, 23, 0.92);
+            color-scheme: dark;
+          }
+          .astro-code,
+          .astro-code span {
+            color: var(--shiki-dark) !important;
+            background-color: var(--shiki-dark-bg) !important;
+          }
+        }
+      </style>
+    </noscript>
   </head>
   <body>
     <header class="site-header">
       <div class="container nav-row">
         <a href="/" class="site-title">{SITE_TITLE}</a>
-        <nav>
-          <a href="/" class:list={[{ active: path === '/' }]}>首页</a>
-          {
-            CATEGORIES.map((cat) => (
-              <a
-                href={`/category/${cat.slug}`}
-                class:list={[{ active: path === `/category/${cat.slug}` }]}
-              >
-                {cat.name}
-              </a>
-            ))
-          }
-          <a
-            href="/about"
-            class:list={[{ active: path === '/about' }]}>关于</a
-          >
-        </nav>
+        <div class="nav-actions">
+          <nav>
+            <a href="/" class:list={[{ active: path === '/' }]}>首页</a>
+            {
+              CATEGORIES.map((cat) => (
+                <a
+                  href={`/category/${cat.slug}`}
+                  class:list={[{ active: path === `/category/${cat.slug}` }]}
+                >
+                  {cat.name}
+                </a>
+              ))
+            }
+            <a
+              href="/about"
+              class:list={[{ active: path === '/about' }]}>关于</a
+            >
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
 
@@ -91,23 +137,24 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         --tag-bg: #eef2ff;
         --tag-fg: #4338ca;
         --header-bg: rgba(255, 255, 255, 0.92);
+        /* Shiki 双主题变量兜底：运行时由 Shiki 在每个 pre/span 内联覆盖为具体颜色 */
+        --shiki-dark: #e6edf3;
+        --shiki-dark-bg: #0d1117;
         color-scheme: light;
       }
 
-      /* 深色模式：跟随系统偏好，配合下方 .astro-code 的 Shiki 双主题变量 */
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --fg: #e6edf3;
-          --fg-muted: #8b949e;
-          --bg: #0d1117;
-          --bg-soft: #1f242c;
-          --border: #30363d;
-          --accent: #58a6ff;
-          --tag-bg: #1c2541;
-          --tag-fg: #b5c7ff;
-          --header-bg: rgba(13, 17, 23, 0.92);
-          color-scheme: dark;
-        }
+      /* 深色模式：由 data-theme 属性驱动（内联脚本根据本地存储/系统偏好设定） */
+      :root[data-theme="dark"] {
+        --fg: #e6edf3;
+        --fg-muted: #8b949e;
+        --bg: #0d1117;
+        --bg-soft: #1f242c;
+        --border: #30363d;
+        --accent: #58a6ff;
+        --tag-bg: #1c2541;
+        --tag-fg: #b5c7ff;
+        --header-bg: rgba(13, 17, 23, 0.92);
+        color-scheme: dark;
       }
 
       * {
@@ -177,6 +224,12 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
       .site-header nav {
         display: flex;
         gap: 1.1rem;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
       }
 
       .site-header nav a {
@@ -297,13 +350,11 @@ const rssUrl = new URL('rss.xml', Astro.site).href;
         font-size: 0.9em;
       }
 
-      /* Shiki 双主题：浅色作为内联默认色，深色时用 --shiki-dark 变量覆盖 */
-      @media (prefers-color-scheme: dark) {
-        .astro-code,
-        .astro-code span {
-          color: var(--shiki-dark) !important;
-          background-color: var(--shiki-dark-bg) !important;
-        }
+      /* Shiki 双主题：深色时用 --shiki-dark 变量覆盖内联的浅色着色 */
+      :root[data-theme="dark"] .astro-code,
+      :root[data-theme="dark"] .astro-code span {
+        color: var(--shiki-dark) !important;
+        background-color: var(--shiki-dark-bg) !important;
       }
 
       article.prose blockquote {

@@ -47,6 +47,8 @@ const minDepth = Math.min(...items.map((h) => h.depth), 6);
     list-style: none;
     margin: 0.6rem 0 0;
     padding: 0;
+    /* 默认缩进；各 li 的 style 会内联覆盖为具体层级缩进 */
+    --indent: 0rem;
   }
 
   .toc-list li {
