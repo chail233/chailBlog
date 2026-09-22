@@ -996,11 +996,17 @@ const siteDays = Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1
         updateDays();
         document.addEventListener('astro:page-load', updateDays);
 
-        // View Transitions 导航后新 body 里的脚本不会自动执行，
-        // 克隆重新插入以触发不蒜子重新取数并计数新页面 PV
+        // View Transitions 导航后新 body 里的脚本不会自动执行，需重新触发不蒜子取数并计数新页面 PV。
+        // 注意：不能用 cloneNode（规范会将克隆体标记为 already started 而永不执行），
+        // 必须 createElement 新建一个真正的 script 插入才会下载执行。
         document.addEventListener('astro:after-swap', () => {
           const s = document.querySelector('script[data-busuanzi]');
-          if (s) s.replaceWith(s.cloneNode(true));
+          if (!s) return;
+          const fresh = document.createElement('script');
+          fresh.async = true;
+          fresh.src = s.src;
+          fresh.dataset.busuanzi = '';
+          s.replaceWith(fresh);
         });
       })();
     </script>

@@ -48,7 +48,7 @@
 - **文章 URL 只用文件名**：`content.config.ts` 的 glob loader 通过 `generateId` 去掉子目录与 `.md` 扩展名，`src/blog/ACM/foo.md` → `/blog/foo`。子目录仅作归类用途。
 - **更新时间三级回退**：frontmatter `updated` → 该文件 git 最后提交时间（构建期由 `utils/git.mjs` 读取）→ 无。列表页与 sitemap `lastmod` 共用这套逻辑；更新时间比发布时间晚 1 小时以上才在文章页显示。
 - **主题切换防闪烁**：`<head>` 内联脚本在首屏绘制前按 `localStorage` / 系统偏好设定 `data-theme`；无 JS 时由 `<noscript>` 里的媒体查询回退到跟随系统。
-- **View Transitions 兼容约定**：所有运行时脚本用 `document` 事件委托或监听 `astro:page-load` / `astro:after-swap` 重建状态；不蒜子统计脚本在 `astro:after-swap` 时克隆重插以触发重新计数。
+- **View Transitions 兼容约定**：所有运行时脚本用 `document` 事件委托或监听 `astro:page-load` / `astro:after-swap` 重建状态；不蒜子统计脚本在 `astro:after-swap` 时用 `createElement` 新建重插以触发重新计数（script 的 `cloneNode` 克隆体被规范标记为 already started，不会执行，不能用于此目的）。
 - **动效体系**：极光背景三团错频漂移、进场错峰、滚动揭示（`js-reveal` + IntersectionObserver）、终端光标闪烁等，全部在 `prefers-reduced-motion: reduce` 下降级关闭。
 - **页脚统计**：已运行天数按访客本地时间实时计算（起始日 `SITE_START_DATE`，含当天）；访问量由不蒜子填充，本地 localhost 预览无法按域名识别站点、数字会落到全局公共桶，以线上为准。
 
