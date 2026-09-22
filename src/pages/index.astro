@@ -68,22 +68,54 @@ const statItems = CATEGORIES.map((c) => ({
     />
   </p>
 
+  <div class="archive-tools">
+    <button type="button" class="tool-btn" data-expand-all>
+      展开全部
+    </button>
+    <button type="button" class="tool-btn" data-collapse-all>
+      折叠全部
+    </button>
+  </div>
+
   <div class="archive">
     {
-      groups.map(([year, list]) => (
-        <section class="archive-group" data-year={year}>
-          <h2 class="archive-year">
-            <span class="comment">#</span> {year}
-          </h2>
-          <ul class="post-list">
-            {list.map((post) => (
-              <li data-title={post.data.title.toLowerCase()}>
-                <PostItem post={post} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))
+      groups.map(([year, list], i) => {
+        // 默认仅展开最新年份，其余折叠，避免主页一次性全部铺开
+        const expanded = i === 0;
+        return (
+          <section
+            class="archive-group"
+            data-year={year}
+            data-expanded={expanded}
+            data-default-expanded={expanded}
+          >
+            <h2 class="archive-year">
+              <button
+                type="button"
+                class="year-toggle"
+                aria-expanded={expanded}
+                aria-controls={`year-list-${year}`}
+              >
+                <span class="caret" aria-hidden="true">
+                  ▾
+                </span>
+                <span class="comment">#</span>
+                <span class="year-label">{year}</span>
+                <span class="year-count">{list.length} 篇</span>
+              </button>
+            </h2>
+            <div class="archive-body" id={`year-list-${year}`}>
+              <ul class="post-list">
+                {list.map((post) => (
+                  <li data-title={post.data.title.toLowerCase()}>
+                    <PostItem post={post} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        );
+      })
     }
     <p class="archive-empty" hidden>
       <span class="search-prompt" aria-hidden="true">$</span> 没有匹配的文章。
@@ -91,34 +123,72 @@ const statItems = CATEGORIES.map((c) => ({
   </div>
 
   <script>
-    // 使用 document 事件委托：View Transitions 后节点会被替换，
-    // 但 document 常驻，输入监听不会失效。
-    document.addEventListener('input', (e) => {
-      const target = e.target as HTMLElement;
-      if (!target || target.id !== 'post-filter') return;
-      const q = (target as HTMLInputElement).value.trim().toLowerCase();
+    // 统一用 document 事件委托：View Transitions 后节点会被替换，
+    // 但 document 常驻，监听不会失效。
 
-      const items = Array.from(
-        document.querySelectorAll<HTMLElement>('.post-list li[data-title]'),
-      );
-      const archiveGroups = Array.from(
+    /** 切换分组展开/折叠，同步 aria-expanded */
+    function setExpanded(group: HTMLElement, expanded: boolean) {
+      group.dataset.expanded = String(expanded);
+      group
+        .querySelector<HTMLElement>('.year-toggle')
+        ?.setAttribute('aria-expanded', String(expanded));
+    }
+
+    /** 按标题过滤：命中项显示，搜索时自动展开有结果的分组，清空时恢复默认折叠态 */
+    function applyFilter(q: string) {
+      const groups = Array.from(
         document.querySelectorAll<HTMLElement>('.archive-group'),
       );
-      const empty = document.querySelector<HTMLElement>('.archive-empty');
-
       let visible = 0;
-      for (const li of items) {
+      for (const li of document.querySelectorAll<HTMLElement>(
+        '.post-list li[data-title]',
+      )) {
         const hit = !q || (li.dataset.title ?? '').includes(q);
         li.hidden = !hit;
         if (hit) visible += 1;
       }
-      for (const g of archiveGroups) {
+      for (const g of groups) {
         const any = Array.from(
           g.querySelectorAll<HTMLElement>('li[data-title]'),
         ).some((li) => !li.hidden);
         g.hidden = !any;
+        if (q) setExpanded(g, any);
+        else setExpanded(g, g.dataset.defaultExpanded === 'true');
       }
+      const empty = document.querySelector<HTMLElement>('.archive-empty');
       if (empty) empty.hidden = visible !== 0;
+    }
+
+    document.addEventListener('input', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target || target.id !== 'post-filter') return;
+      applyFilter((target as HTMLInputElement).value.trim().toLowerCase());
+    });
+
+    document.addEventListener('click', (e) => {
+      const from = e.target as HTMLElement;
+
+      const toggle = from.closest<HTMLElement>('.year-toggle');
+      if (toggle) {
+        const g = toggle.closest<HTMLElement>('.archive-group');
+        if (g) setExpanded(g, g.dataset.expanded !== 'true');
+        return;
+      }
+
+      if (from.closest<HTMLElement>('[data-expand-all]')) {
+        for (const g of document.querySelectorAll<HTMLElement>(
+          '.archive-group:not([hidden])',
+        ))
+          setExpanded(g, true);
+        return;
+      }
+
+      if (from.closest<HTMLElement>('[data-collapse-all]')) {
+        for (const g of document.querySelectorAll<HTMLElement>(
+          '.archive-group:not([hidden])',
+        ))
+          setExpanded(g, false);
+      }
     });
   </script>
 </BaseLayout>
@@ -238,6 +308,91 @@ const statItems = CATEGORIES.map((c) => ({
 
   .archive-group:first-of-type .archive-year {
     margin-top: 0;
+  }
+
+  /* 年份标题即折叠开关：整行可点，终端风三角指示 */
+  .year-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.18s ease;
+  }
+
+  .year-toggle:hover {
+    color: var(--accent);
+  }
+
+  .year-toggle:hover .year-count {
+    color: var(--accent);
+  }
+
+  .caret {
+    display: inline-block;
+    color: var(--accent);
+    font-size: 0.85em;
+    transition: transform 0.2s ease;
+  }
+
+  .archive-group[data-expanded='false'] .caret {
+    transform: rotate(-90deg);
+  }
+
+  .year-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 折叠体：grid-template-rows 1fr↔0fr 实现平滑高度动画 */
+  .archive-body {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.3s ease;
+  }
+
+  .archive-group[data-expanded='false'] .archive-body {
+    grid-template-rows: 0fr;
+  }
+
+  .archive-body > .post-list {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .archive-tools {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin: -0.6rem 0 1.25rem;
+  }
+
+  .tool-btn {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--fg-muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.28rem 0.6rem;
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease;
+  }
+
+  .tool-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
   }
 
   .archive-empty {
