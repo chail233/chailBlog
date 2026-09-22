@@ -8,6 +8,7 @@ export const SITE_START_DATE = '2026-09-20';
 export const CATEGORIES: { name: string; slug: string }[] = [
   { name: '算法足迹', slug: 'acm' },
   { name: '外物报', slug: 'waiwubao' },
+  { name: '诗歌', slug: 'poetry' }
 ];
 
 /** 分类名 -> 分类页路径（未登记的分类直接用中文名做 slug） */
