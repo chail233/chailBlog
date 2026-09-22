@@ -5,7 +5,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import PostNav from '../../components/PostNav.astro';
 import CodeEnhancements from '../../components/CodeEnhancements.astro';
-import { categoryClass, categoryPath, formatDate } from '../../const';
+import { categoryClass, categoryPath, formatDate, ogImagePath } from '../../const';
 import { sortPostsByDate, updatedDate, readingTime } from '../../utils/post';
 import 'katex/dist/katex.min.css';
 
@@ -36,6 +36,7 @@ const minutes = readingTime(post);
   title={post.data.title}
   description={post.data.description}
   type="article"
+  image={ogImagePath(post.id)}
 >
   <article class="prose">
     <header class="post-header">

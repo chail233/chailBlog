@@ -1,0 +1,75 @@
+/* 基础层：重置、排版根元素、容器、链接、主题过渡与层级。 */
+* {
+  box-sizing: border-box;
+}
+
+/* 确保 hidden 属性能覆盖组件上的 display（卡片 li 用了 display:flex） */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.7;
+  /* A. 底色竖向渐变，摆脱纯色 */
+  background-color: var(--bg);
+  background-image: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 主题平滑过渡 */
+body,
+.site-header,
+.post-card,
+.toc,
+.tag,
+.theme-toggle,
+.site-footer {
+  transition: background-color 0.35s ease, border-color 0.35s ease,
+    color 0.2s ease;
+}
+
+/* 让内容浮在背景网格之上 */
+.site-header,
+main,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* 玻璃拟态：面板半透明 + 背景模糊，让光晕/网格/噪点透出，避免死白 */
+.post-card,
+.post-filter,
+.hero-stat {
+  -webkit-backdrop-filter: blur(9px) saturate(1.15);
+  backdrop-filter: blur(9px) saturate(1.15);
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+main.container {
+  min-height: calc(100vh - 160px);
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

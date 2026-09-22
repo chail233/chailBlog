@@ -1,0 +1,112 @@
+/* 背景质感层：竖向渐变（在 base.css 的 body 上）+ 网格 + 噪点 + 极光漂移。 */
+
+/* B + C：全屏弱网格（静态底纹；色彩光晕由 .aurora 漂移层负责） */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+/* D：极淡灰噪点颗粒，去掉纯色的塑料感 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--noise);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* E：深色模式专属——网格层叠加一层极淡 CRT 扫描线 */
+:root[data-theme='dark'] body::before {
+  background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.025) 0px,
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100% 100%, 34px 34px, 34px 34px;
+}
+
+/* 极光动效：三团缓慢漂移的柔光（GPU transform，独立于网格层） */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora__blob {
+  position: absolute;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.aurora__blob--a {
+  top: -18%;
+  left: -12%;
+  background: radial-gradient(circle, var(--glow), transparent 68%);
+  animation: drift-a 26s ease-in-out infinite;
+}
+
+.aurora__blob--b {
+  top: -12%;
+  right: -14%;
+  background: radial-gradient(circle, var(--glow-2, transparent), transparent 68%);
+  animation: drift-b 34s ease-in-out infinite;
+}
+
+.aurora__blob--c {
+  bottom: -26%;
+  left: 24%;
+  background: radial-gradient(circle, var(--glow), transparent 68%);
+  animation: drift-c 40s ease-in-out infinite;
+}
+
+:root[data-theme='dark'] .aurora__blob {
+  opacity: 0.6;
+}
+
+@keyframes drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(10vw, 8vh) scale(1.18);
+  }
+}
+
+@keyframes drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-8vw, 10vh) scale(1.12);
+  }
+}
+
+@keyframes drift-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6vw, -10vh) scale(1.2);
+  }
+}

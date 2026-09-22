@@ -1,0 +1,170 @@
+/* ===== 全站微动效（进场 + 悬停 + 页面过渡 + 无障碍降级），保持克制 ===== */
+
+/* 进场：淡入上移（Hero 与列表卡片共用） */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-eyebrow {
+  animation: rise-in 0.5s ease both;
+}
+
+.hero-title {
+  animation: rise-in 0.5s ease 0.06s both;
+}
+
+.hero-sub {
+  animation: rise-in 0.5s ease 0.12s both;
+}
+
+.hero-stats {
+  animation: rise-in 0.5s ease 0.18s both;
+}
+
+/* 文章页头部：同样淡入上移 */
+.post-header {
+  animation: rise-in 0.5s ease both;
+}
+
+/* 滚动揭示：卡片/年份标题进入视口才淡入上浮（位移更大、逐批错峰，动效更明显） */
+/* 仅在 html.js-reveal（JS 可用）时隐藏初始态，保证无 JS 直接可见且不闪烁 */
+.js-reveal .post-list li,
+.js-reveal .archive-year {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.js-reveal .post-list li.reveal-in,
+.js-reveal .archive-year.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* 终端光标：标题末尾闪烁方块 */
+.hero-title::after {
+  content: '\258D';
+  display: inline-block;
+  margin-left: 0.12em;
+  color: var(--accent);
+  transform: translateY(0.02em);
+  animation: caret-blink 1.1s steps(1, end) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 导航链接：悬停下划线从左向右生长（.active 用方括号，排除） */
+.site-header nav a:not(.active) {
+  position: relative;
+}
+
+.site-header nav a:not(.active)::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s ease;
+}
+
+.site-header nav a:not(.active):hover::after {
+  transform: scaleX(1);
+}
+
+/* 标签：悬停轻微上浮 */
+.tag {
+  transition: transform 0.15s ease, filter 0.15s ease,
+    background-color 0.35s ease;
+}
+
+.tag:hover {
+  transform: translateY(-1px);
+}
+
+/* 卡片标题指示符：悬停时向右轻推 */
+.post-title::before {
+  display: inline-block;
+  transition: transform 0.18s ease;
+}
+
+.post-card:hover .post-title::before {
+  transform: translateX(3px);
+}
+
+/* View Transitions：页面切换淡入 + 轻微上移 */
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+::view-transition-old(root) {
+  animation: none;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 0.32s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .aurora__blob {
+    animation: none !important;
+  }
+
+  .hero-eyebrow,
+  .hero-title,
+  .hero-sub,
+  .hero-stats,
+  .post-header {
+    animation: none !important;
+  }
+
+  .js-reveal .post-list li,
+  .js-reveal .archive-year {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .hero-title::after {
+    animation: none !important;
+    opacity: 1;
+  }
+}

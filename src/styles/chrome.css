@@ -1,0 +1,105 @@
+/* 页面框架：吸顶导航栏 + 页脚。 */
+
+/* 导航栏 */
+.site-header {
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--header-bg);
+  backdrop-filter: blur(6px);
+}
+
+.nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.site-title {
+  font-family: var(--font-ui);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+
+.site-title:hover {
+  text-decoration: none;
+  color: var(--accent);
+}
+
+.site-header nav {
+  display: flex;
+  gap: 1.1rem;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.site-header nav a {
+  font-family: var(--font-ui);
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+}
+
+.site-header nav a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.site-header nav a.active {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.site-header nav a.active::before {
+  content: '[';
+  margin-right: 0.15em;
+}
+
+.site-header nav a.active::after {
+  content: ']';
+  margin-left: 0.15em;
+}
+
+/* 页脚 */
+.site-footer {
+  border-top: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  padding: 1.5rem 0;
+}
+
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+}
+
+.footer-copy .muted {
+  color: var(--fg-muted);
+}
+
+.footer-links {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.footer-links a {
+  display: inline-flex;
+  color: var(--fg-muted);
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}

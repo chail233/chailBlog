@@ -1,0 +1,59 @@
+/* 设计令牌：颜色 / 字体 / 分类色 / Shiki 兜底变量。
+   深浅色由 :root[data-theme="dark"] 覆盖，主题切换仅改这些变量。 */
+:root {
+  --fg: #1f2328;
+  --fg-muted: #57606a;
+  --bg: #eef1f4;
+  --bg-soft: #e6ecf2;
+  --bg-card: rgba(255, 255, 255, 0.6);
+  --border: #d0d7de;
+  --accent: #0b7a4b;
+  --tag-bg: #e6f4ec;
+  --tag-fg: #0b6e46;
+  --header-bg: rgba(238, 241, 244, 0.8);
+  --grid: rgba(11, 122, 75, 0.08);
+  --glow: rgba(11, 122, 75, 0.34);
+  --glow-2: rgba(9, 105, 218, 0.26);
+  --noise: 0.04;
+  --shadow: 0 1px 2px rgba(31, 35, 40, 0.06), 0 8px 24px rgba(31, 35, 40, 0.06);
+  /* 分类色 */
+  --acm: #0969da;
+  --acm-bg: #e7f0fb;
+  --waiwubao: #9a6700;
+  --waiwubao-bg: #fbf0dc;
+  /* 字体：全站等宽风——西文/数字用 JetBrains Mono，中文用霞鹜文楷等宽（1:2 对齐） */
+  --font-ui: 'JetBrains Mono Variable', 'JetBrains Mono', 'LXGW WenKai Mono',
+    'Cascadia Code', ui-monospace, 'SFMono-Regular',
+    Consolas, 'Sarasa Mono SC', 'Microsoft YaHei', monospace;
+  --font-body: 'JetBrains Mono Variable', 'JetBrains Mono', 'LXGW WenKai Mono',
+    'Cascadia Code', ui-monospace, 'SFMono-Regular', Consolas,
+    'Microsoft YaHei', 'PingFang SC', monospace;
+  /* Shiki 双主题变量兜底：运行时由 Shiki 在每个 pre/span 内联覆盖为具体颜色 */
+  --shiki-dark: #e6edf3;
+  --shiki-dark-bg: #0d1117;
+  color-scheme: light;
+}
+
+/* 深色模式：由 data-theme 属性驱动（内联脚本根据本地存储/系统偏好设定） */
+:root[data-theme='dark'] {
+  --fg: #c9d1d9;
+  --fg-muted: #7d8590;
+  --bg: #0b0f14;
+  --bg-soft: #131a22;
+  --bg-card: rgba(16, 22, 29, 0.5);
+  --border: #232b33;
+  --accent: #3ddc84;
+  --tag-bg: #0e2a1c;
+  --tag-fg: #56d364;
+  --header-bg: rgba(11, 15, 20, 0.82);
+  --grid: rgba(61, 220, 132, 0.06);
+  --glow: rgba(61, 220, 132, 0.36);
+  --glow-2: rgba(88, 166, 255, 0.28);
+  --noise: 0.05;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.45);
+  --acm: #58a6ff;
+  --acm-bg: #12283f;
+  --waiwubao: #d29922;
+  --waiwubao-bg: #2b2210;
+  color-scheme: dark;
+}

@@ -1,6 +1,9 @@
 export const SITE_TITLE = 'chail Blog';
 export const SITE_DESCRIPTION = 'chail 的云存档';
 
+/** 站点域名（OG 图右下角展示） */
+export const SITE_DOMAIN = 'chail.tech';
+
 /** 建站日期（页脚“已运行天数”从此日按含当天计算） */
 export const SITE_START_DATE = '2026-09-20';
 
@@ -33,4 +36,12 @@ export function formatDate(date: Date): string {
 /** 文章页相对路径；id 可能含 [] 空格等字符，需 URL 编码 */
 export function postPath(id: string): string {
   return `/blog/${encodeURIComponent(id)}`;
+}
+
+/**
+ * 文章 OG 分享图相对路径；与 postPath 同用 encodeURIComponent 保证 URL 一致，
+ * 对应端点 src/pages/og/[slug].png.ts（getStaticPaths 以原始 id 作参数）。
+ */
+export function ogImagePath(id: string): string {
+  return `/og/${encodeURIComponent(id)}.png`;
 }

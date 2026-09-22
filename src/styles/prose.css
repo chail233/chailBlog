@@ -1,0 +1,87 @@
+/* 文章页头部、正文排版、代码/公式与 Shiki 双主题覆盖。 */
+
+/* 文章页头部 */
+.post-header {
+  margin-bottom: 2rem;
+}
+
+.post-header h1 {
+  font-family: var(--font-ui);
+  font-size: 1.7rem;
+  line-height: 1.4;
+  margin: 0 0 0.6rem;
+}
+
+.post-header h1::before {
+  content: '# ';
+  color: var(--accent);
+}
+
+.post-meta {
+  font-family: var(--font-ui);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+article.prose h1,
+article.prose h2,
+article.prose h3,
+article.prose h4 {
+  line-height: 1.4;
+  margin-top: 1.8em;
+  /* 锚点/TOC 跳转时避开吸顶 header，标题不被遮挡 */
+  scroll-margin-top: 5rem;
+}
+
+/* 目录等带 #id 的锚点目标统一留出顶栏空间 */
+article.prose [id] {
+  scroll-margin-top: 5rem;
+}
+
+article.prose img {
+  max-width: 100%;
+}
+
+article.prose pre {
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.9rem;
+}
+
+article.prose code:not(pre code) {
+  background: var(--bg-soft);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Shiki 双主题：深色时用 --shiki-dark 变量覆盖内联的浅色着色 */
+:root[data-theme='dark'] .astro-code,
+:root[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+article.prose blockquote {
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  border-left: 4px solid var(--border);
+  color: var(--fg-muted);
+}
+
+/* KaTeX 块级公式：过长时可横向滚动，不撑破版面 */
+article.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2em 0;
+}
+
+.page-title {
+  font-family: var(--font-ui);
+  margin-top: 0;
+}
