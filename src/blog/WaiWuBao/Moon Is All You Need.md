@@ -340,7 +340,7 @@ categories:
 ---
 
 在9月25日这一天晚上，我和两位朋友来到了钱塘江边的草坪。我轻轻地坐了下来，观赏江上夜空中高挂的明亮的月亮：
-![](https://img.wemd.app/1790343133449_eov5kh.jpg)
+<img src="https://img.wemd.app/1790343133449_eov5kh.jpg" alt="江上明月" loading="lazy" decoding="async">
 
 江边绿道有很多行人，很是热闹，而月亮静静地挂在天空，周围看不到任何星星。
 
@@ -350,7 +350,7 @@ categories:
 
 短暂停留后，我们就返回了。
 
-![](https://img.wemd.app/1790343452716_wm24i6.jpg)
+<img src="https://img.wemd.app/1790343452716_wm24i6.jpg" alt="月夜随拍" loading="lazy" decoding="async">
 
 ---
 

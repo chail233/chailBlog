@@ -724,7 +724,8 @@ categories:
     if (!bgm) {
       bgm = new Audio(BGM_SRC);
       bgm.loop = true;
-      bgm.preload = 'auto';
+      /* 不预加载：OGG 有 1.2MB，进页就下载会拖慢加载；点播放时 play() 会自动开始取流 */
+      bgm.preload = 'none';
       bgm.volume = 0;
       bgm.addEventListener('error', function () {
         bgmBad = true; // 文件缺失：不展示坏按钮
