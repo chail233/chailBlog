@@ -3,7 +3,7 @@ import { ClientRouter } from 'astro:transitions';
 import '@fontsource-variable/jetbrains-mono';
 /* 霞鹜文楷等宽版：cn-font-split 按 unicode-range 分片，浏览器只下载页面用到的那几片 */
 import '@callmebill/lxgw-wenkai-web/lxgwwenkaimono-regular/result.css';
-import { SITE_TITLE, SITE_DESCRIPTION, SITE_START_DATE, CATEGORIES } from '../const';
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_START_DATE } from '../const';
 import ThemeToggle from '../components/ThemeToggle.astro';
 
 /* 全站样式按职责拆分到 src/styles/*.css，导入顺序即层叠顺序（令牌→基础→背景→框架→卡片→正文→动效） */
@@ -150,16 +150,12 @@ const siteDays = Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1
         <div class="nav-actions">
           <nav>
             <a href="/" class:list={[{ active: path === '/' }]}>首页</a>
-            {
-              CATEGORIES.map((cat) => (
-                <a
-                  href={`/category/${cat.slug}`}
-                  class:list={[{ active: path === `/category/${cat.slug}` }]}
-                >
-                  {cat.name}
-                </a>
-              ))
-            }
+            <!-- 分类不再逐个展开，统一入口在 /categories 分类页 -->
+            <a
+              href="/categories"
+              class:list={[{ active: path === '/categories' || path.startsWith('/category/') }]}
+              >分类</a
+            >
             <a
               href="/about"
               class:list={[{ active: path === '/about' }]}>关于</a

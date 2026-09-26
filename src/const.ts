@@ -7,7 +7,7 @@ export const SITE_DOMAIN = 'chail.tech';
 /** 建站日期（页脚“已运行天数”从此日按含当天计算） */
 export const SITE_START_DATE = '2026-09-20';
 
-/** 导航栏中展示的分类，新增分类时在此登记 */
+/** 导航栏目统一指向 /categories 分类页，新增分类时在此登记 */
 export const CATEGORIES: { name: string; slug: string }[] = [
   { name: '算法足迹', slug: 'acm' },
   { name: '外物报', slug: 'waiwubao' },

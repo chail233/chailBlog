@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CATEGORIES } from '../const';
+
+const posts = await getCollection('posts', ({ data }) => !data.draft);
+
+/* 已登记分类 + 文章中出现的未登记分类，统一列出入口 */
+const registered = new Set(CATEGORIES.map((c) => c.name));
+const extra = posts
+  .flatMap((post) => post.data.categories)
+  .filter((name) => !registered.has(name));
+
+const cats = [
+  ...CATEGORIES.map((c) => ({ ...c, count: 0 })),
+  ...[...new Set(extra)].map((name) => ({ name, slug: name, count: 0 })),
+];
+for (const post of posts) {
+  for (const name of post.data.categories) {
+    const cat = cats.find((c) => c.name === name);
+    if (cat) cat.count++;
+  }
+}
+---
+
+<BaseLayout title="分类">
+  <h1 class="page-title">分类</h1>
+  <ul class="category-list">
+    {
+      cats.map((cat) => (
+        <li>
+          <a href={`/category/${cat.slug}`} class="category-card">
+            <span class="category-card__name">{cat.name}</span>
+            <span class="category-card__count">{cat.count} 篇文章</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
