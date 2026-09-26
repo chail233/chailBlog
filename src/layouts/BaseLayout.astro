@@ -5,6 +5,7 @@ import '@fontsource-variable/jetbrains-mono';
 import '@callmebill/lxgw-wenkai-web/lxgwwenkaimono-regular/result.css';
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_START_DATE } from '../const';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import ReadingProgress from '../components/ReadingProgress.astro';
 
 /* 全站样式按职责拆分到 src/styles/*.css，导入顺序即层叠顺序（令牌→基础→背景→框架→卡片→正文→动效） */
 import '../styles/tokens.css';
@@ -139,6 +140,8 @@ const siteDays = Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1
     </noscript>
   </head>
   <body>
+    <!-- 阅读进度条：仅文章页，作为 body 直接子元素避开 main 的层叠上下文，才能盖在顶栏之上 -->
+    {type === 'article' && <ReadingProgress />}
     <div class="aurora" aria-hidden="true">
       <span class="aurora__blob aurora__blob--a"></span>
       <span class="aurora__blob aurora__blob--b"></span>

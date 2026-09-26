@@ -130,6 +130,16 @@
   color: var(--waiwubao);
 }
 
+.tag--poetry {
+  background: var(--poetry-bg);
+  color: var(--poetry);
+}
+
+.tag--essay {
+  background: var(--essay-bg);
+  color: var(--essay);
+}
+
 /* 分类入口页（/categories）：与文章卡片同系的终端风入口 */
 .category-list {
   list-style: none;
