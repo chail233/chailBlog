@@ -6,6 +6,7 @@ import '@callmebill/lxgw-wenkai-web/lxgwwenkaimono-regular/result.css';
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_START_DATE } from '../const';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import ReadingProgress from '../components/ReadingProgress.astro';
+import NavProgress from '../components/NavProgress.astro';
 
 /* 全站样式按职责拆分到 src/styles/*.css，导入顺序即层叠顺序（令牌→基础→背景→框架→卡片→正文→动效） */
 import '../styles/tokens.css';
@@ -140,6 +141,8 @@ const siteDays = Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1
     </noscript>
   </head>
   <body>
+    <!-- 导航加载指示条：View Transitions 导航期间显示进度，网络慢时不再"点了没反应" -->
+    <NavProgress />
     <!-- 阅读进度条：仅文章页，作为 body 直接子元素避开 main 的层叠上下文，才能盖在顶栏之上 -->
     {type === 'article' && <ReadingProgress />}
     <div class="aurora" aria-hidden="true">
@@ -152,15 +155,18 @@ const siteDays = Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1
         <a href="/" class="site-title">{SITE_TITLE}</a>
         <div class="nav-actions">
           <nav>
-            <a href="/" class:list={[{ active: path === '/' }]}>首页</a>
+            <!-- data-astro-prefetch="viewport"：页面加载后自动预取常用入口，点击时直接换页 -->
+            <a href="/" data-astro-prefetch="viewport" class:list={[{ active: path === '/' }]}>首页</a>
             <!-- 分类不再逐个展开，统一入口在 /categories 分类页 -->
             <a
               href="/categories"
+              data-astro-prefetch="viewport"
               class:list={[{ active: path === '/categories' || path.startsWith('/category/') }]}
               >分类</a
             >
             <a
               href="/about"
+              data-astro-prefetch="viewport"
               class:list={[{ active: path === '/about' }]}>关于</a
             >
           </nav>

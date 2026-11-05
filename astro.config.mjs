@@ -58,6 +58,13 @@ function postLastmodMap() {
 export default defineConfig({
   // 站点绝对 URL：sitemap / RSS / canonical / OG 依赖它生成绝对链接
   site: 'https://chail.tech',
+  // 链接预取：hover 即开始拉取目标页 HTML，点击后 ClientRouter 命中浏览器缓存，
+  // 网络慢（如国内访问 Cloudflare 国际节点）时大幅缩短点击后的等待。
+  // 关键入口链接单独标注 data-astro-prefetch="viewport"，页面加载后自动预取。
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover',
+  },
   integrations: [
     sitemap({
       // 该版本集成不支持逐项 lastmod，借助 serialize 回调按文章 URL 注入

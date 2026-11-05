@@ -1,0 +1,14 @@
+# Cloudflare Pages 响应头配置（部署时按 dist/_headers 生效）。
+# 注意：多条规则同时命中时同名 header 会以逗号合并而非覆盖，
+# 因此特殊路径必须先用 "! Cache-Control" 摘除通配规则设置的值，再重新设置。
+
+# HTML/其他静态文件：短 TTL。5 分钟内的重复访问与 View Transitions 导航
+# 直接命中浏览器缓存，免去慢网络下的 304 再验证往返（实测 TTFB 2-11s）。
+# 代价：部署后 5 分钟内老访客可能看到旧页面，对个人博客可接受。
+/*
+  Cache-Control: public, max-age=300
+
+# 构建产物（CSS/JS/字体分片）：文件名带内容哈希，内容不变 URL 不变，可强缓存一年。
+/_astro/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable

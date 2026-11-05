@@ -17,7 +17,7 @@ const { newer = null, older = null } = Astro.props;
     <nav class="post-nav" aria-label="上下篇">
       <div class="post-nav-cell">
         {older && (
-          <a href={postPath(older.id)} class="post-nav-link" rel="prev">
+          <a href={postPath(older.id)} class="post-nav-link" rel="prev" data-astro-prefetch="viewport">
             <span class="post-nav-label">← 上一篇</span>
             <span class="post-nav-title">{older.data.title}</span>
           </a>
@@ -25,7 +25,7 @@ const { newer = null, older = null } = Astro.props;
       </div>
       <div class="post-nav-cell right">
         {newer && (
-          <a href={postPath(newer.id)} class="post-nav-link" rel="next">
+          <a href={postPath(newer.id)} class="post-nav-link" rel="next" data-astro-prefetch="viewport">
             <span class="post-nav-label">下一篇 →</span>
             <span class="post-nav-title">{newer.data.title}</span>
           </a>

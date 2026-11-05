@@ -1,0 +1,157 @@
+---
+---
+
+<div class="nav-progress" aria-hidden="true">
+  <span class="nav-progress__bar"></span>
+</div>
+
+<script>
+  // 同文档导航（View Transitions）的加载指示条。
+  // ClientRouter 点击后静默 fetch 下一页，浏览器不显示任何加载状态，
+  // 网络慢时表现为"点了没反应"，此组件补上缺失的视觉反馈。
+  //
+  // 事件流（astro:transitions）：
+  //   astro:before-preparation 导航开始（fetch 前） → 启动条（延迟 100ms，避免预取命中时的闪烁）
+  //   astro:after-preparation      新页面 fetch+解析完成 → 标记待完成
+  //   astro:page-load              换页后 → 在新页面的条上播完成动画并淡出
+  //   兜底：fetch 停滞超过 NAV_TIMEOUT 时强制走浏览器原生导航（自带加载指示），
+  //         避免实测中出现过的 40s 级连接挂起导致条永远停在半路。
+
+  const SHOW_DELAY = 100; // 预取命中的导航几乎瞬时完成，延迟显示避免闪烁
+  const NAV_TIMEOUT = 8000; // fetch 停滞超时（ms），超时改走原生导航
+  const DONE_HOLD = 300; // 完成动画停留时长（ms）
+  const FADE_OUT = 200; // 淡出后再复位 transform，避免 1→0 的回卷动画可见
+
+  let showTimer: number | undefined;
+  let doneTimer: number | undefined;
+  let watchdog: number | undefined;
+  let target: URL | null = null;
+  let navigating = false;
+  let pendingDone = false;
+
+  const root = () => document.querySelector<HTMLElement>('.nav-progress');
+  const inner = () =>
+    document.querySelector<HTMLElement>('.nav-progress__bar');
+
+  function clearTimers() {
+    clearTimeout(showTimer);
+    clearTimeout(watchdog);
+  }
+
+  function start(e: Event) {
+    const ev = e as Event & { to?: URL };
+    clearTimers();
+    navigating = true;
+    pendingDone = false;
+    target = ev.to ?? null;
+    showTimer = window.setTimeout(() => {
+      root()?.classList.add('nav-progress--active');
+    }, SHOW_DELAY);
+    // fetch 停滞兜底：超时后改为浏览器原生导航（可看到浏览器自己的进度指示）
+    watchdog = window.setTimeout(() => {
+      if (navigating && target) {
+        navigating = false;
+        location.assign(target.href);
+      }
+    }, NAV_TIMEOUT);
+  }
+
+  function ready() {
+    // fetch/解析完成：取消停滞兜底与延迟显示
+    clearTimeout(watchdog);
+    clearTimeout(showTimer);
+    navigating = false;
+    // 条尚未显示说明导航瞬时完成（预取命中），无需任何反馈
+    if (!root()?.classList.contains('nav-progress--active')) return;
+    // 条已显示：换页后在新的条上播完成动画（本节点即将被 swap 替换）
+    pendingDone = true;
+  }
+
+  function finish() {
+    const el = root();
+    if (!el) return;
+    if (pendingDone) {
+      el.classList.add('nav-progress--done');
+      doneTimer = window.setTimeout(() => {
+        el.classList.remove('nav-progress--active'); // 先淡出
+        window.setTimeout(() => {
+          el.classList.remove('nav-progress--done'); // 隐身后再复位 transform
+        }, FADE_OUT);
+      }, DONE_HOLD);
+    } else {
+      // 安全网：非预期残留（如导航中断）直接隐藏
+      el.classList.remove('nav-progress--active', 'nav-progress--done');
+    }
+    pendingDone = false;
+  }
+
+  document.addEventListener('astro:before-preparation', start);
+  document.addEventListener('astro:after-preparation', ready);
+  document.addEventListener('astro:page-load', finish);
+  // 页面被原生导航接管或标签页恢复时清掉遗留定时器
+  window.addEventListener('pagehide', clearTimers);
+</script>
+
+<style>
+  .nav-progress {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: transparent;
+    z-index: 102; /* 高于阅读进度条(101)与顶栏(100) */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .nav-progress--active {
+    opacity: 1;
+  }
+
+  .nav-progress__bar {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
+    background: linear-gradient(
+      90deg,
+      var(--accent),
+      color-mix(in srgb, var(--accent) 55%, var(--glow-2, var(--accent)))
+    );
+    will-change: transform;
+  }
+
+  /* 4s 内缓出推进到 85% 后停住：不到 100% 是因为此刻尚未真正完成 */
+  .nav-progress--active .nav-progress__bar {
+    animation: nav-progress-grow 4s cubic-bezier(0.08, 0.82, 0.17, 1) forwards;
+  }
+
+  .nav-progress--done .nav-progress__bar {
+    animation: none;
+    transform: scaleX(1);
+    transition: transform 150ms ease-out;
+  }
+
+  @keyframes nav-progress-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(0.85);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-progress,
+    .nav-progress__bar {
+      transition: none;
+    }
+    .nav-progress--active .nav-progress__bar {
+      animation-duration: 0s; /* 跳过推进动画，静态显示 */
+    }
+    .nav-progress--done .nav-progress__bar {
+      transition: none;
+    }
+  }
+</style>
