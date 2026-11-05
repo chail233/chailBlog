@@ -1,8 +1,10 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import '@fontsource-variable/jetbrains-mono';
-/* 霞鹜文楷等宽版：cn-font-split 按 unicode-range 分片，浏览器只下载页面用到的那几片 */
-import '@callmebill/lxgw-wenkai-web/lxgwwenkaimono-regular/result.css';
+/* 霞鹜文楷等宽版：cn-font-split 按 unicode-range 分片，浏览器只下载页面用到的那几片。
+   拆出关键路径：?url 仅取产物地址，head 里异步加载（原同步内联会让 220KB 的
+   @font-face 声明阻塞首屏渲染；分片本就异步、font-display: swap，首屏观感不变） */
+import lxgwFontCss from '@callmebill/lxgw-wenkai-web/lxgwwenkaimono-regular/result.css?url';
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_START_DATE } from '../const';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import ReadingProgress from '../components/ReadingProgress.astro';
@@ -89,6 +91,11 @@ const siteDays = Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1
 
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- 中文字体声明：media=print 异步加载完成后切回 all，不阻塞首屏；无 JS 时由 noscript 同步加载 -->
+    <link rel="stylesheet" href={lxgwFontCss} media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href={lxgwFontCss} />
+    </noscript>
     <link
       rel="alternate"
       type="application/rss+xml"
